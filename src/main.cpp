@@ -64,7 +64,6 @@ int main(int argc, char **argv) {
 		oldTime = newTime;
 		newTime = glfwGetTime();
 		deltaTime = newTime - oldTime;
-		std::cout << (int)(1 / deltaTime) << "\n";
 		// swap front and back buffers
 		glfwSwapBuffers(window);
 		// poll events
