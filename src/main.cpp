@@ -1,12 +1,31 @@
 #include <iostream>
-//#define GLAD_GL_IMPLEMENTATION
 #define GLFW_INCLUDE_NONE
 #include <glad/glad.h>
-//#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 int width, height;
 double newTime, oldTime, deltaTime;
+
+//vertex shaders (magic)
+const char *vertex_shader_source = "#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"void main()\n"
+"{\n"
+"\tgl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"}\0";
+
+const char *fragment_shader_source = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"\tFragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"}\0";
+
+// vertex shader objects
+unsigned int vertex_shader;
+
+// fragment shader objects
+unsigned int frag_shader;
 
 // vertex buffer object
 unsigned int VBO;
@@ -26,6 +45,9 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 	if (action == GLFW_PRESS) {
 		switch (key) {
 			case GLFW_KEY_TAB:
+				glfwSetWindowShouldClose(window, true);
+				break;
+			case GLFW_KEY_ESCAPE:
 				glfwSetWindowShouldClose(window, true);
 				break;
 			default:
@@ -79,6 +101,14 @@ int main(int argc, char **argv) {
 	// GL_DYNAMIC_DRAW - data is changed many times and used by the GPU many times
 	// We dont want the position to change at all, so we use GL_STATIC_DRAW, if we wanted the position to 
 	// change, GL_DYNAMIC_DRAW would be used (GPU stores the data in memory with faster write speeds)
+	// Set up the vertex shader
+	vertex_shader = glCreateShader(GL_VERTEX_SHADER); // create a shader in the unsigned int vertex_shader with type GL_VERTEX_SHADER
+	glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL); // glShaderSource(shader object, number of strings, shader source string)
+	glCompileShader(vertex_shader); // actually compile the shader
+	// Set up the fragment shader (very similar to vertex shader setup, but with fragment shaders instead)
+	frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(frag_shader, 1, &fragment_shader_source, NULL);
+	glCompileShader(frag_shader);
 	while (!glfwWindowShouldClose(window)) {
 		// render
 		glClearColor(1.f, 1.f, 1.f, 1.f);
