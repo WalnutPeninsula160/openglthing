@@ -1,4 +1,8 @@
 #include <iostream>
+//#define GLAD_GL_IMPLEMENTATION
+#define GLFW_INCLUDE_NONE
+#include <glad/glad.h>
+//#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 int width, height;
@@ -23,11 +27,14 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 void framebuffer_size_callback(GLFWwindow *window, int x, int y) {
 	width = x;
 	height = y;
+	glViewport(0, 0, width, height);
 }
 
 int main(int argc, char **argv) {
 	GLFWwindow *window;
+	// initialize GLFW (glfw functions wont work if i dont do this)
 	if (!glfwInit()) {
+		std::cerr << "Failed to initialize GLFW\n";
 		return -1;
 	}
 	width = 600;
@@ -37,14 +44,22 @@ int main(int argc, char **argv) {
 		glfwTerminate();
 		return -1;
 	}
-	glfwGetFramebufferSize(window, &width, &height);
 	glfwMakeContextCurrent(window);
+	// initialize glad (opengl functions wont work if i dont do this)
+	// this needs to be done AFTER glfwMakeContextCurrent(window) or else it will fail
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		std::cerr << "Failed to initialize GLAD\n";
+		return -1;
+	}
+	glfwGetFramebufferSize(window, &width, &height);
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	// enable vsync
+	// enable vsync (this might be limited by the gpu drivers being locked at a certain fps)
 	glfwSwapInterval(1);
+	glViewport(0, 0, width, height); // idk if setting the frame buffer callback automatically does this
 	while (!glfwWindowShouldClose(window)) {
 		// render
+		glClearColor(1.f, 1.f, 1.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		oldTime = newTime;
 		newTime = glfwGetTime();
