@@ -6,7 +6,7 @@
 int width, height;
 double newTime, oldTime, deltaTime;
 
-//vertex shaders (magic)
+// vertex shaders (magic)
 const char *vertex_shader_source = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "void main()\n"
@@ -14,12 +14,16 @@ const char *vertex_shader_source = "#version 330 core\n"
 "\tgl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 "}\0";
 
+// fragment shaders (calculate the colors of pixels)
 const char *fragment_shader_source = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
 "\tFragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
 "}\0";
+
+// shader program (multiple shaders combined)
+unsigned int shader_program;
 
 // vertex shader objects
 unsigned int vertex_shader;
@@ -109,6 +113,15 @@ int main(int argc, char **argv) {
 	frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(frag_shader, 1, &fragment_shader_source, NULL);
 	glCompileShader(frag_shader);
+	// link vertexshader and fragment shader into a shader program
+	shader_program = glCreateProgram();
+	glAttachShader(shader_program, vertex_shader);
+	glAttachShader(shader_program, frag_shader);
+	glLinkProgram(shader_program); // results inn a program shader that can be activated by glUseProgram
+	glUseProgram(shader_program); // activate the shader program
+	// since the vertex and frag shaders are no longer needed (because of the shader program beinng activated, we can delete them)
+	glDeleteShader(vertex_shader);
+	glDeleteShader(frag_shader);
 	while (!glfwWindowShouldClose(window)) {
 		// render
 		glClearColor(1.f, 1.f, 1.f, 1.f);
