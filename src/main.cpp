@@ -1,9 +1,10 @@
 #include <iostream>
+#include <cmath>
 #define GLFW_INCLUDE_NONE
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-static const float vertices[] = {
+static float vertices[] = {
 	0.f,	0.5f, 0.f,
 	-0.5f,	-0.5f,	0.f,
 	0.5f,	-0.5f,	0.f
@@ -20,7 +21,7 @@ static const char *frag_shader_source = "#version 330 code\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
-"	FragColor = vec4(1.0, 0.5, 0.2, 1.0);\n"
+"	FragColor = vec4(1.0, 0.5, 0.3, 1.0);\n"
 "}\0";
 
 void err_callback(int error, const char *desc) {
@@ -44,8 +45,26 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
 
+void rotateTriangle2D(float triangle[], float rads) {
+	float s = std::sinf(rads);
+	float c = std::cosf(rads);
+	float x = triangle[0] * c - triangle[1] * s;
+	float y = triangle[0] * s + triangle[1] * c;
+	triangle[0] = x;
+	triangle[1] = y;
+	x = triangle[3] * c - triangle[4] * s;
+	y = triangle[3] * s + triangle[4] * c;
+	triangle[3] = x;
+	triangle[4] = y;
+	x = triangle[6] * c - triangle[7] * s;
+	y = triangle[6] * s + triangle[7] * c;
+	triangle[6] = x;
+	triangle[7] = y;
+}
+
 int main() {
 	int width, height;
+	float oldTime, newTime, deltaTime;
 	GLFWwindow *window;
 	GLuint vertex_buffer, vertex_shader, frag_shader, shader_program, vertex_array;
 	if (!glfwInit()) {
@@ -88,13 +107,20 @@ int main() {
 	
 	glBindVertexArray(vertex_array);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	newTime = (float)glfwGetTime();
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shader_program);
 		glBindVertexArray(vertex_array);
+		oldTime = newTime;
+		newTime = (float)glfwGetTime();
+		deltaTime = newTime - oldTime;
+		rotateTriangle2D(vertices, 2.f * static_cast<float>(M_PI) * deltaTime / 2.f);
+		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
