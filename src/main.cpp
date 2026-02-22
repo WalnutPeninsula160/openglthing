@@ -47,9 +47,10 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 
 // because opengl uses ranges from -1.0 to 1.0 for position values, the width and heigth affects how much something moves across the screen
 // im too lazy to account for this right now, so rotation WILL change the dimensions of the triangle
-void rotateTriangle2D(float triangle[], float rads) {
+void rotateTriangle2D(float triangle[], float rads) { // 2D rotation matrix bc of course im going to use that
 	float s = std::sinf(rads);
 	float c = std::cosf(rads);
+	// i only have to update 3 vertices bc its a triangle, so i dont need a filthy loop
 	float x = triangle[0] * c - triangle[1] * s;
 	float y = triangle[0] * s + triangle[1] * c;
 	triangle[0] = x;
