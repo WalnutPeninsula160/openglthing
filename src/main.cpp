@@ -17,7 +17,7 @@ static const char *vertex_shader_source = "#version 330 core\n"
 "	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);"
 "}\0";
 
-static const char *frag_shader_source = "#version 330 code\n"
+static const char *frag_shader_source = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
@@ -68,6 +68,8 @@ void rotateTriangle2D(float triangle[], float rads) { // 2D rotation matrix bc o
 int main() {
 	int width, height;
 	float oldTime, newTime, deltaTime;
+	int shader_compile_success;
+	char shader_compile_logInfo[512];
 	GLFWwindow *window;
 	GLuint vertex_buffer, vertex_shader, frag_shader, shader_program, vertex_array;
 	if (!glfwInit()) {
@@ -96,10 +98,20 @@ int main() {
 	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
 	glCompileShader(vertex_shader);
+	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &shader_compile_success);
+	if (!shader_compile_success) {
+		glGetShaderInfoLog(vertex_shader, 512, NULL, shader_compile_logInfo);
+		std::cerr << "Vertex shader failed to compile: " << shader_compile_logInfo << "\n";
+	}
 
 	frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(frag_shader, 1, &frag_shader_source, NULL);
 	glCompileShader(frag_shader);
+	glGetShaderiv(frag_shader, GL_COMPILE_STATUS, &shader_compile_success);
+	if (!shader_compile_success) {
+		glGetShaderInfoLog(frag_shader, 512, NULL, shader_compile_logInfo);
+		std::cerr << "Frag shader failed to compile: " << shader_compile_logInfo << "\n";
+	}
 
 	shader_program = glCreateProgram();
 	glAttachShader(shader_program, vertex_shader);
@@ -113,6 +125,7 @@ int main() {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
 	newTime = (float)glfwGetTime();
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
