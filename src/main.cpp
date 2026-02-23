@@ -77,7 +77,7 @@ int main() {
 		return -1;
 	}
 	glfwSetErrorCallback(err_callback);
-	window = glfwCreateWindow(600, 400, "window", NULL, NULL);
+	window = glfwCreateWindow(600, 600, "window", NULL, NULL);
 	if (!window) {
 		std::cerr << "Could not create window\n";
 		return -1;
