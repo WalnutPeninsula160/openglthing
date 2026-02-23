@@ -4,24 +4,33 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-static float vertices[] = {
-	0.f,	0.5f, 0.f,
+// prolly should change this to triangle_data or something
+// first 9 elements are for positions, last 9 are for colors
+static float triangle_data[] = {
+	0.f,	0.5f,	0.f,
 	-0.5f,	-0.5f,	0.f,
-	0.5f,	-0.5f,	0.f
+	0.5f,	-0.5f,	0.f,
+	0.f,	0.f,	0.f,
+	0.f,	0.f,	0.f,
+	0.f,	0.f,	0.f
 };
 
 static const char *vertex_shader_source = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
+"in vec3 InColor;\n"
+"out vec3 color;\n"
 "void main()\n"
 "{\n"
-"	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);"
+"	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"	color = InColor;\n"
 "}\0";
 
 static const char *frag_shader_source = "#version 330 core\n"
+"in vec3 color;\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
-"	FragColor = vec4(1.0, 0.5, 0.3, 1.0);\n"
+"	FragColor = vec4(color, 1.0);\n"
 "}\0";
 
 void err_callback(int error, const char *desc) {
@@ -45,12 +54,10 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
 
-// because opengl uses ranges from -1.0 to 1.0 for position values, the width and heigth affects how much something moves across the screen
-// im too lazy to account for this right now, so rotation WILL change the dimensions of the triangle
-void rotateTriangle2D(float triangle[], float rads) { // 2D rotation matrix bc of course im going to use that
+void rotateTriangle2D(float triangle[], float rads) { // 2D rotation matrix bc of course im using that
 	float s = std::sinf(rads);
 	float c = std::cosf(rads);
-	// i only have to update 3 vertices bc its a triangle, so i dont need a filthy loop
+	// i only have to update 3 vertices bc its a triangle so i dont need a filthy loop
 	float x = triangle[0] * c - triangle[1] * s;
 	float y = triangle[0] * s + triangle[1] * c;
 	triangle[0] = x;
@@ -65,6 +72,14 @@ void rotateTriangle2D(float triangle[], float rads) { // 2D rotation matrix bc o
 	triangle[7] = y;
 }
 
+// badly named
+void changeColor(float *color, float nt) {
+	const float s = std::sinf(nt);
+	color[10] = s * s; // opengl uses color ranges from 0 to 1 (which is the range of sin^2 x
+	color[13] = s * s;
+	color[16] = s * s;
+}
+
 int main() {
 	int width, height;
 	float oldTime, newTime, deltaTime;
@@ -72,6 +87,7 @@ int main() {
 	char shader_compile_logInfo[512];
 	GLFWwindow *window;
 	GLuint vertex_buffer, vertex_shader, frag_shader, shader_program, vertex_array;
+	GLint vec_position_location, vec_color_location;
 	if (!glfwInit()) {
 		std::cerr << "Could not initialize glfw\n";
 		return -1;
@@ -122,9 +138,13 @@ int main() {
 	
 	glBindVertexArray(vertex_array);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_data), triangle_data, GL_DYNAMIC_DRAW);
+	//vec_position_location = glGetAttribLocation(shader_program, "aPos");
+	vec_color_location = glGetAttribLocation(shader_program, "InColor");
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(vec_color_location, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(9 * sizeof(float)));
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(vec_color_location);
 
 	newTime = (float)glfwGetTime();
 	while (!glfwWindowShouldClose(window)) {
@@ -134,9 +154,10 @@ int main() {
 		oldTime = newTime;
 		newTime = (float)glfwGetTime();
 		deltaTime = newTime - oldTime;
-		rotateTriangle2D(vertices, 2.f * static_cast<float>(M_PI) * deltaTime / 2.f);
+		rotateTriangle2D(triangle_data, 2.f * static_cast<float>(M_PI) * deltaTime / 2.f);
+		changeColor(triangle_data, newTime);
 		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_data), triangle_data, GL_DYNAMIC_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
