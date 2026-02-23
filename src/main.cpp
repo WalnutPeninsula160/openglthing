@@ -73,8 +73,8 @@ void rotateTriangle2D(float triangle[], float rads) { // 2D rotation matrix bc o
 }
 
 // badly named
-void changeColor(float *color, float nt) {
-	const float s = std::sinf(nt);
+void changeColor(float *color, float nt, float rate) {
+	const float s = std::sinf(nt * rate * 2.f * static_cast<float>(M_PI));
 	color[10] = s * s; // opengl uses color ranges from 0 to 1 (which is the range of sin^2 x
 	color[13] = s * s;
 	color[16] = s * s;
@@ -155,7 +155,7 @@ int main() {
 		newTime = (float)glfwGetTime();
 		deltaTime = newTime - oldTime;
 		rotateTriangle2D(triangle_data, 2.f * static_cast<float>(M_PI) * deltaTime / 2.f);
-		changeColor(triangle_data, newTime);
+		changeColor(triangle_data, newTime, 1.f);
 		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_data), triangle_data, GL_DYNAMIC_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
