@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cmath>
+#include <filesystem>
+#include <cstdio> // prolly should lean to use the c++ file reading, but im too lazy rn
 #define GLFW_INCLUDE_NONE
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -10,28 +12,14 @@ static float triangle_data[] = {
 	0.f,	0.5f,	0.f,
 	-0.5f,	-0.5f,	0.f,
 	0.5f,	-0.5f,	0.f,
-	0.f,	0.f,	0.f,
-	0.f,	0.f,	0.f,
-	0.f,	0.f,	0.f
+	1.f,	0.f,	0.f,
+	0.f,	1.f,	0.f,
+	0.f,	0.f,	1.f
 };
 
-static const char *vertex_shader_source = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"in vec3 InColor;\n"
-"out vec3 color;\n"
-"void main()\n"
-"{\n"
-"	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"	color = InColor;\n"
-"}\0";
+char *vertex_shader_source;
 
-static const char *frag_shader_source = "#version 330 core\n"
-"in vec3 color;\n"
-"out vec4 FragColor;\n"
-"void main()\n"
-"{\n"
-"	FragColor = vec4(color, 1.0);\n"
-"}\0";
+char *frag_shader_source;
 
 void err_callback(int error, const char *desc) {
 	std::cerr << "Error: " << desc << "\n";
@@ -75,9 +63,9 @@ void rotateTriangle2D(float triangle[], float rads) { // 2D rotation matrix bc o
 // badly named
 void changeColor(float *color, float nt, float rate) {
 	const float s = std::sinf(nt * rate * 2.f * static_cast<float>(M_PI));
-	color[10] = s * s; // opengl uses color ranges from 0 to 1 (which is the range of sin^2 x
+	color[9] = s * s; // opengl uses color ranges from 0 to 1 (which is the range of sin^2 x
 	color[13] = s * s;
-	color[16] = s * s;
+	color[17] = s * s;
 }
 
 int main() {
@@ -88,6 +76,9 @@ int main() {
 	GLFWwindow *window;
 	GLuint vertex_buffer, vertex_shader, frag_shader, shader_program, vertex_array;
 	GLint vec_position_location, vec_color_location;
+	FILE *vertex_shader_file, *fragment_shader_file;
+	long file_size; // can just reuse this for both files
+	size_t bytes_read;
 	if (!glfwInit()) {
 		std::cerr << "Could not initialize glfw\n";
 		return -1;
@@ -110,7 +101,51 @@ int main() {
 	glViewport(0, 0, width, height);
 
 	glGenBuffers(1, &vertex_buffer);
-
+	
+	// get shader text from source files
+	vertex_shader_file = std::fopen("./assets/shaders/shader.vert", "rb");
+	if (!vertex_shader_file) {
+		std::cerr << "Could not open file: ./assets/shaders/shader.vert\n";
+		return -1;
+	}
+	std::fseek(vertex_shader_file, 0, SEEK_END);
+	file_size = std::ftell(vertex_shader_file);
+	if (-1 == file_size) {
+		std::cerr << "Could not get size of file: ./assets/shaders/shader.vert\n";
+		std::fclose(vertex_shader_file);
+		return -1;
+	}
+	vertex_shader_source = new char[(file_size + 1) * sizeof(char)]; // +1 for null terminator
+	std::rewind(vertex_shader_file);
+	bytes_read = std::fread(vertex_shader_source, sizeof(char), file_size, vertex_shader_file);
+	std::fclose(vertex_shader_file);
+	if (file_size != bytes_read) {
+		std::cerr << "Could not read file: ./assets/shaders/shader.vert\n";
+		return -1;
+	}
+	vertex_shader_source[file_size] = '\0';
+	fragment_shader_file = std::fopen("./assets/shaders/shader.frag", "rb");
+	if (!fragment_shader_file) {
+		std::cerr << "Could not open file: ./assets/shaders/shader.frag\n";
+		return -1;
+	}
+	std::fseek(fragment_shader_file, 0, SEEK_END);
+	file_size = std::ftell(fragment_shader_file);
+	if (-1 == file_size) {
+		std::cerr << "Could not get size of file: ./assets/shaders/shader.frag\n";
+		std::fclose(fragment_shader_file);
+		return -1;
+	}
+	frag_shader_source = new char[(file_size + 1) * sizeof(char)]; // +1 for null terminator
+	std::rewind(fragment_shader_file);
+	bytes_read = std::fread(frag_shader_source, sizeof(char), file_size, fragment_shader_file);
+	std::fclose(fragment_shader_file);
+	if (file_size != bytes_read) {
+		std::cerr << "Could not read file: ./assets/shaders/shader.frag\n";
+		return -1;
+	}
+	frag_shader_source[file_size] = '\0';
+	
 	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
 	glCompileShader(vertex_shader);
@@ -155,7 +190,7 @@ int main() {
 		newTime = (float)glfwGetTime();
 		deltaTime = newTime - oldTime;
 		rotateTriangle2D(triangle_data, 2.f * static_cast<float>(M_PI) * deltaTime / 2.f);
-		changeColor(triangle_data, newTime, 1.f);
+		//changeColor(triangle_data, newTime, 1.f);
 		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_data), triangle_data, GL_DYNAMIC_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
