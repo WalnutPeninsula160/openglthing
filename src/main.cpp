@@ -6,7 +6,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-// prolly should change this to triangle_data or something
 // first 9 elements are for positions, last 9 are for colors
 static float triangle_data[] = {
 	0.f,	0.5f,	0.f,
@@ -42,32 +41,6 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
 
-void rotateTriangle2D(float triangle[], float rads) { // 2D rotation matrix bc of course im using that
-	float s = std::sinf(rads);
-	float c = std::cosf(rads);
-	// i only have to update 3 vertices bc its a triangle so i dont need a filthy loop
-	float x = triangle[0] * c - triangle[1] * s;
-	float y = triangle[0] * s + triangle[1] * c;
-	triangle[0] = x;
-	triangle[1] = y;
-	x = triangle[3] * c - triangle[4] * s;
-	y = triangle[3] * s + triangle[4] * c;
-	triangle[3] = x;
-	triangle[4] = y;
-	x = triangle[6] * c - triangle[7] * s;
-	y = triangle[6] * s + triangle[7] * c;
-	triangle[6] = x;
-	triangle[7] = y;
-}
-
-// badly named
-void changeColor(float *color, float nt, float rate) {
-	const float s = std::sinf(nt * rate * 2.f * static_cast<float>(M_PI));
-	color[9] = s * s; // opengl uses color ranges from 0 to 1 (which is the range of sin^2 x
-	color[13] = s * s;
-	color[17] = s * s;
-}
-
 int main() {
 	int width, height;
 	float oldTime, newTime, deltaTime;
@@ -75,7 +48,7 @@ int main() {
 	char shader_compile_logInfo[512];
 	GLFWwindow *window;
 	GLuint vertex_buffer, vertex_shader, frag_shader, shader_program, vertex_array;
-	GLint vec_position_location, vec_color_location;
+	GLint vec_position_location, vec_color_location, scalar_time_location;
 	FILE *vertex_shader_file, *fragment_shader_file;
 	long file_size; // can just reuse this for both files
 	size_t bytes_read;
@@ -176,6 +149,7 @@ int main() {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_data), triangle_data, GL_DYNAMIC_DRAW);
 	//vec_position_location = glGetAttribLocation(shader_program, "aPos");
 	vec_color_location = glGetAttribLocation(shader_program, "InColor");
+	scalar_time_location = glGetUniformLocation(shader_program, "time");
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glVertexAttribPointer(vec_color_location, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(9 * sizeof(float)));
 	glEnableVertexAttribArray(0);
@@ -185,12 +159,11 @@ int main() {
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shader_program);
+		glUniform1f(scalar_time_location, newTime);
 		glBindVertexArray(vertex_array);
 		oldTime = newTime;
 		newTime = (float)glfwGetTime();
 		deltaTime = newTime - oldTime;
-		rotateTriangle2D(triangle_data, 2.f * static_cast<float>(M_PI) * deltaTime / 2.f);
-		//changeColor(triangle_data, newTime, 1.f);
 		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_data), triangle_data, GL_DYNAMIC_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, 3);

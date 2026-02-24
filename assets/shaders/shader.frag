@@ -1,9 +1,9 @@
 #version 330 core
-in vec3 color;
-in float distance;
+in vec3 fragColor;
+in float fragDistance;
 out vec4 FragColor;
 void main()
 {
 	float intensity = 0.5f;
-	FragColor = (intensity / (distance * distance)) * vec4(color, 1.0);
+	FragColor = (intensity / (fragDistance * fragDistance)) * vec4(fragColor, 1.0);
 }
