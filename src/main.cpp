@@ -76,15 +76,15 @@ int main() {
 	glGenBuffers(1, &vertex_buffer);
 	
 	// get shader text from source files
-	vertex_shader_file = std::fopen("./assets/shaders/shader.vert", "rb");
+	vertex_shader_file = std::fopen("./shaders/shader.vert", "rb");
 	if (!vertex_shader_file) {
-		std::cerr << "Could not open file: ./assets/shaders/shader.vert\n";
+		std::cerr << "Could not open file: ./shaders/shader.vert\n";
 		return -1;
 	}
 	std::fseek(vertex_shader_file, 0, SEEK_END);
 	file_size = std::ftell(vertex_shader_file);
 	if (-1 == file_size) {
-		std::cerr << "Could not get size of file: ./assets/shaders/shader.vert\n";
+		std::cerr << "Could not get size of file: ./shaders/shader.vert\n";
 		std::fclose(vertex_shader_file);
 		return -1;
 	}
@@ -93,19 +93,19 @@ int main() {
 	bytes_read = std::fread(vertex_shader_source, sizeof(char), file_size, vertex_shader_file);
 	std::fclose(vertex_shader_file);
 	if (file_size != bytes_read) {
-		std::cerr << "Could not read file: ./assets/shaders/shader.vert\n";
+		std::cerr << "Could not read file: ./shaders/shader.vert\n";
 		return -1;
 	}
 	vertex_shader_source[file_size] = '\0';
-	fragment_shader_file = std::fopen("./assets/shaders/shader.frag", "rb");
+	fragment_shader_file = std::fopen("./shaders/shader.frag", "rb");
 	if (!fragment_shader_file) {
-		std::cerr << "Could not open file: ./assets/shaders/shader.frag\n";
+		std::cerr << "Could not open file: ./shaders/shader.frag\n";
 		return -1;
 	}
 	std::fseek(fragment_shader_file, 0, SEEK_END);
 	file_size = std::ftell(fragment_shader_file);
 	if (-1 == file_size) {
-		std::cerr << "Could not get size of file: ./assets/shaders/shader.frag\n";
+		std::cerr << "Could not get size of file: ./shaders/shader.frag\n";
 		std::fclose(fragment_shader_file);
 		return -1;
 	}
@@ -114,7 +114,7 @@ int main() {
 	bytes_read = std::fread(frag_shader_source, sizeof(char), file_size, fragment_shader_file);
 	std::fclose(fragment_shader_file);
 	if (file_size != bytes_read) {
-		std::cerr << "Could not read file: ./assets/shaders/shader.frag\n";
+		std::cerr << "Could not read file: ./shaders/shader.frag\n";
 		return -1;
 	}
 	frag_shader_source[file_size] = '\0';
