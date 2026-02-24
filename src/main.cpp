@@ -147,12 +147,12 @@ int main() {
 	glBindVertexArray(vertex_array);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_data), triangle_data, GL_DYNAMIC_DRAW);
-	//vec_position_location = glGetAttribLocation(shader_program, "aPos");
-	vec_color_location = glGetAttribLocation(shader_program, "InColor");
+	vec_position_location = glGetAttribLocation(shader_program, "vertPosition");
+	vec_color_location = glGetAttribLocation(shader_program, "vertColor");
 	scalar_time_location = glGetUniformLocation(shader_program, "time");
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(vec_position_location, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glVertexAttribPointer(vec_color_location, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(9 * sizeof(float)));
-	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(vec_position_location);
 	glEnableVertexAttribArray(vec_color_location);
 
 	newTime = (float)glfwGetTime();
