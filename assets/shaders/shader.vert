@@ -1,3 +1,4 @@
+// notes: add 3D quaternion rotation to support 3D rotations
 #version 330 core
 in vec3 vertPosition;
 in vec3 vertColor;
