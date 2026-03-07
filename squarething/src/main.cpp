@@ -44,9 +44,16 @@ static float square_color[] = {
 };
 
 
-unsigned int square_indices[] = {
+static unsigned int square_indices[] = {
 	0,	1,	3,
 	1,	2,	3
+};
+
+static float square_tex_coords[] = {
+	1.f,	1.f,
+	0.f,	1.f,
+	0.f,	0.f,
+	1.f,	0.f
 };
 
 void err_callback(int err, const char *desc) {
