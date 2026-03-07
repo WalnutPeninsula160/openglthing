@@ -33,10 +33,10 @@ char *read_file(const char *path) {
 }
 
 static float square_data[] = {
-	100.f,	100.f,	0.f,
-	50.f,	100.f,	0.f,
-	50.f,	50.f,	0.f,
-	100.f,	50.f,	0.f
+	0.5f,	0.5f,	0.f,
+	-0.5f,	0.5f,	0.f,
+	-0.5f,	-0.5f,	0.f,
+	0.5f,	-0.5f,	0.f
 };
 
 static float square_color[] = {
@@ -53,10 +53,6 @@ void err_callback(int err, const char *desc) {
 	std::cerr << "Error: " << desc << '\n';
 }
 
-static int sizes[] = {
-	600,	400
-};
-
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
 	if (action == GLFW_PRESS) {
 		switch (key) {
@@ -72,8 +68,6 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 
 static void framebuffer_siz_callback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
-	sizes[0] = width;
-	sizes[1] = height;
 }
 
 int main() {
@@ -82,7 +76,7 @@ int main() {
 	const char frag_shader_path[] = "./shaders/shader.frag";
 	char *vert_shader_source, *frag_shader_source;
 	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer; // 
-	GLint vec3_vertPosition, vec3_Color, vec2_Size; // buffer objects for shaders
+	GLint vec3_vertPosition, vec3_Color; // buffer objects for shaders
 	int success;
 	char info[512];
 	glfwSetErrorCallback(err_callback);
@@ -142,7 +136,6 @@ int main() {
 	// create vertex buffer object and vertex array object (and element buffer object)
 	vec3_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
 	vec3_Color = glGetUniformLocation(shader_program, "Color");
-	vec2_Size = glGetUniformLocation(shader_program, "Size");
 	glGenVertexArrays(1, &vertex_array);
 	glGenBuffers(1, &vertex_buffer);
 	glGenBuffers(1, &element_buffer);
@@ -154,7 +147,6 @@ int main() {
 	glVertexAttribPointer(vec3_vertPosition, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(vec3_vertPosition);
 	glUniform3fv(vec3_Color, 1, square_color);
-	glUniform2iv(vec2_Size, 1, sizes);
 
 
 	//main loop
@@ -168,7 +160,6 @@ int main() {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(square_indices), square_indices, GL_DYNAMIC_DRAW);
 		glUniform3fv(vec3_Color, 1, &square_color[0]);
-		glUniform2iv(vec2_Size, 1, &sizes[0]);
 		// draw things (glDrawElements uses the indices from the bound element buffer object, in this case element_buffer)
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		// second parameter - the number of indices specified, since opengl uses triangles, 2 triangles are needed to draw a square resulting in 6 vertices drawn
