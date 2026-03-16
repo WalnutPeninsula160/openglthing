@@ -1,0 +1,1 @@
+according to the learn opengl thing comments, putting '-mwindows' as a compilation flag RIGHT after the g++ part stops the cli from automatically opening when the executable runs (at least on windows)
