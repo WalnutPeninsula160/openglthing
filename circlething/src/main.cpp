@@ -33,28 +33,9 @@ char *read_file(const char *path) {
 	return result;
 }
 
-// vec3 verts, vec2 texCoords
-/*
-float circle_data[] = {
-	0.f,	0.f,
-	1.f,	0.f,
-	0.5f,	0.8660254f,
-	-0.5f,	0.8660254f,
-	-1.f,	0.f,
-	-0.5f,	-0.8660254f,
-	0.5f,	-0.8660254f
-};
-*/
+#define SEGMENTS 100
 circleObject<100> circle_data = circle_vert_data(0, 0, 1, 100);
-
-unsigned int circle_indices[] = {
-	0,	1,	2,
-	0,	2,	3,
-	0,	3,	4,
-	0,	4,	5,
-	0,	5,	6,
-	0,	6,	1
-};
+circleIndices<100> circle_indices = circle_index_data(100);
 
 float circle_color[] = {
 	1.f,	0.5f,	0.2f,	1.f
@@ -82,6 +63,7 @@ static void framebuffer_siz_callback(GLFWwindow *window, int width, int height) 
 }
 
 int main() {
+	std::cout << '\n';
 	int width, height;
 	const char vert_shader_path[] = "./shaders/shader.vert";
 	const char frag_shader_path[] = "./shaders/shader.frag";
@@ -99,7 +81,7 @@ int main() {
 		glfwTerminate();
 		return -1;
 	}
-	GLFWwindow *window = glfwCreateWindow(600, 400, "square", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(600, 600, "circle", NULL, NULL);
 	if (!window) {
 		std::cerr << "Could not create window\n";
 		goto main_exit_err;
@@ -157,7 +139,7 @@ int main() {
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(circle_data), circle_data.data(), GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(circle_indices), circle_indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(circle_indices), circle_indices.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(vec2_vertPosition, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(vec2_vertPosition);
 	glUniform4fv(vec4_Color, 1, circle_color);
@@ -171,7 +153,7 @@ int main() {
 		// load stuff into the buffer (buffer data then uniform)
 		glUniform4fv(vec4_Color, 1, circle_color);
 		// draw things (glDrawElements uses the indices from the bound element buffer object, in this case element_buffer)
-		glDrawElements(GL_TRIANGLES, 300, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 303, GL_UNSIGNED_INT, 0);
 		// second parameter - the number of indices specified, since opengl uses triangles, 2 triangles are needed to draw a square resulting in 6 vertices drawn
 		// fourth parameter - the offset of the indices
 		glfwSwapBuffers(window);
