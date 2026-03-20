@@ -1,28 +1,75 @@
 #include <iostream>
-#include <cmath>
-#include <filesystem>
-#include <cstdio> // prolly should lean to use the c++ file reading, but im too lazy rn
+#include <cstdlib>
 #define GLFW_INCLUDE_NONE
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "objects.hpp"
 
-circleObject<6> circle{.verts = {}}
+char *read_file(const char *path) { 
+	FILE *file = std::fopen(path, "rb");
+	char *result;
+	long file_size;
+	size_t bytes_read;
+	if (!file) {
+		std::cerr << "Could not open file: " << path << '\n';
+		return NULL;
+	}
+	std::fseek(file, 0, SEEK_END);
+	file_size = std::ftell(file);
+	if (-1 == file_size) {
+		std::cerr << "Could not get size of file: " << path << "t\n";
+		std::fclose(file);
+		return NULL;
+}
+	result = new char[(file_size + 1) * sizeof(char)];
+	std::rewind(file);
+	bytes_read = std::fread(result, sizeof(char), file_size, file);
+	std::fclose(file);
+	if (file_size != bytes_read) {
+		std::cerr << "Could not read file: " << path << "\n";
+		return NULL;
+	}
+	result[file_size] = '\0';
+	return result;
+}
 
-char *vertex_shader_source;
+// vec3 verts, vec2 texCoords
+/*
+float circle_data[] = {
+	0.f,	0.f,
+	1.f,	0.f,
+	0.5f,	0.8660254f,
+	-0.5f,	0.8660254f,
+	-1.f,	0.f,
+	-0.5f,	-0.8660254f,
+	0.5f,	-0.8660254f
+};
+*/
+circleObject<100> circle_data = circle_vert_data(0, 0, 1, 100);
 
-char *frag_shader_source;
+unsigned int circle_indices[] = {
+	0,	1,	2,
+	0,	2,	3,
+	0,	3,	4,
+	0,	4,	5,
+	0,	5,	6,
+	0,	6,	1
+};
 
-void err_callback(int error, const char *desc) {
-	std::cerr << "Error: " << desc << "\n";
-} 
+float circle_color[] = {
+	1.f,	0.5f,	0.2f,	1.f
+};
+
+void err_callback(int err, const char *desc) {
+	std::cerr << "Error: " << desc << '\n';
+}
 
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-	if (GLFW_PRESS == action) {
+	if (action == GLFW_PRESS) {
 		switch (key) {
-			case GLFW_KEY_ESCAPE:
 			case GLFW_KEY_TAB:
-				glfwSetWindowShouldClose(window, true);
+			case GLFW_KEY_ESCAPE:
+				glfwSetWindowShouldClose(window, GLFW_TRUE);
 				break;
 			default:
 				break;
@@ -30,138 +77,109 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 	}
 }
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+static void framebuffer_siz_callback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
 
 int main() {
 	int width, height;
-	float oldTime, newTime, deltaTime;
-	int shader_compile_success;
-	char shader_compile_logInfo[512];
-	GLFWwindow *window;
-	GLuint vertex_buffer, vertex_shader, frag_shader, shader_program, vertex_array;
-	GLint vec_position_location, vec_color_location, scalar_time_location;
-	FILE *vertex_shader_file, *fragment_shader_file;
-	long file_size; // can just reuse this for both files
-	size_t bytes_read;
+	const char vert_shader_path[] = "./shaders/shader.vert";
+	const char frag_shader_path[] = "./shaders/shader.frag";
+	const char tex_image_path[] = "./textures/Uzumaki-Junji-Ito.jpg";
+	unsigned char *tex_data;
+	char *vert_shader_source, *frag_shader_source;
+	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer, texture; // 
+	GLint vec2_vertPosition, vec4_Color; // buffer objects for shaders
+	int success;
+	char info[512];
+	int tex_width, tex_height, tex_nrChannels;
+	glfwSetErrorCallback(err_callback);
 	if (!glfwInit()) {
 		std::cerr << "Could not initialize glfw\n";
+		glfwTerminate();
 		return -1;
 	}
-	glfwSetErrorCallback(err_callback);
-	window = glfwCreateWindow(600, 600, "window", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(600, 400, "square", NULL, NULL);
 	if (!window) {
 		std::cerr << "Could not create window\n";
-		return -1;
+		goto main_exit_err;
 	}
-	glfwMakeContextCurrent(window);
 	glfwSetKeyCallback(window, key_callback);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwMakeContextCurrent(window);
+	glfwSetFramebufferSizeCallback(window, framebuffer_siz_callback);
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		std::cerr << "Could not initialize glad\n";
-		return -1;
+		std::cerr << "Coult not initialize glad\n";
+		goto main_exit_err;
 	}
 	glfwSwapInterval(1);
 	glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
 
-	glGenBuffers(1, &vertex_buffer);
+	// compile shaders
+	vert_shader_source = read_file(vert_shader_path);
+	if (!vert_shader_source)
+		goto main_exit_err;
+	vert_shader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vert_shader, 1, &vert_shader_source, NULL);
+	glCompileShader(vert_shader);
+	glGetShaderiv(vert_shader, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		glGetShaderInfoLog(vert_shader, 512, NULL, info);
+		std::cerr << "Could not compile vertex shader\n" << info << '\n';
+	}
 	
-	// get shader text from source files
-	vertex_shader_file = std::fopen("./shaders/shader.vert", "rb");
-	if (!vertex_shader_file) {
-		std::cerr << "Could not open file: ./shaders/shader.vert\n";
-		return -1;
-	}
-	std::fseek(vertex_shader_file, 0, SEEK_END);
-	file_size = std::ftell(vertex_shader_file);
-	if (-1 == file_size) {
-		std::cerr << "Could not get size of file: ./shaders/shader.vert\n";
-		std::fclose(vertex_shader_file);
-		return -1;
-	}
-	vertex_shader_source = new char[(file_size + 1) * sizeof(char)]; // +1 for null terminator
-	std::rewind(vertex_shader_file);
-	bytes_read = std::fread(vertex_shader_source, sizeof(char), file_size, vertex_shader_file);
-	std::fclose(vertex_shader_file);
-	if (file_size != bytes_read) {
-		std::cerr << "Could not read file: ./shaders/shader.vert\n";
-		return -1;
-	}
-	vertex_shader_source[file_size] = '\0';
-	fragment_shader_file = std::fopen("./shaders/shader.frag", "rb");
-	if (!fragment_shader_file) {
-		std::cerr << "Could not open file: ./shaders/shader.frag\n";
-		return -1;
-	}
-	std::fseek(fragment_shader_file, 0, SEEK_END);
-	file_size = std::ftell(fragment_shader_file);
-	if (-1 == file_size) {
-		std::cerr << "Could not get size of file: ./shaders/shader.frag\n";
-		std::fclose(fragment_shader_file);
-		return -1;
-	}
-	frag_shader_source = new char[(file_size + 1) * sizeof(char)]; // +1 for null terminator
-	std::rewind(fragment_shader_file);
-	bytes_read = std::fread(frag_shader_source, sizeof(char), file_size, fragment_shader_file);
-	std::fclose(fragment_shader_file);
-	if (file_size != bytes_read) {
-		std::cerr << "Could not read file: ./shaders/shader.frag\n";
-		return -1;
-	}
-	frag_shader_source[file_size] = '\0';
-	
-	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
-	glCompileShader(vertex_shader);
-	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &shader_compile_success);
-	if (!shader_compile_success) {
-		glGetShaderInfoLog(vertex_shader, 512, NULL, shader_compile_logInfo);
-		std::cerr << "Vertex shader failed to compile: " << shader_compile_logInfo << "\n";
-	}
-
+	frag_shader_source = read_file(frag_shader_path);
+	if (!frag_shader_source)
+		goto main_exit_err;
 	frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(frag_shader, 1, &frag_shader_source, NULL);
 	glCompileShader(frag_shader);
-	glGetShaderiv(frag_shader, GL_COMPILE_STATUS, &shader_compile_success);
-	if (!shader_compile_success) {
-		glGetShaderInfoLog(frag_shader, 512, NULL, shader_compile_logInfo);
-		std::cerr << "Frag shader failed to compile: " << shader_compile_logInfo << "\n";
+	glGetShaderiv(frag_shader, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		glGetShaderInfoLog(frag_shader, 512, NULL, info);
+		std::cerr << "Could not compile fragment shader\n" << info << '\n';
 	}
 
+	// create shader program
 	shader_program = glCreateProgram();
-	glAttachShader(shader_program, vertex_shader);
+	glAttachShader(shader_program, vert_shader);
 	glAttachShader(shader_program, frag_shader);
 	glLinkProgram(shader_program);
 
+	// configure vertex attributes (everything will be passed to the vertex shader, and then the vertex shader will pass needed values to the fragment shader)
+	// create vertex buffer object and vertex array object (and element buffer object)
+	vec2_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
+	vec4_Color = glGetUniformLocation(shader_program, "Color");
 	glGenVertexArrays(1, &vertex_array);
-	
+	glGenBuffers(1, &vertex_buffer);
+	glGenBuffers(1, &element_buffer);
 	glBindVertexArray(vertex_array);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_data), triangle_data, GL_DYNAMIC_DRAW);
-	vec_position_location = glGetAttribLocation(shader_program, "vertPosition");
-	vec_color_location = glGetAttribLocation(shader_program, "vertColor");
-	scalar_time_location = glGetUniformLocation(shader_program, "time");
-	glVertexAttribPointer(vec_position_location, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glVertexAttribPointer(vec_color_location, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(9 * sizeof(float)));
-	glEnableVertexAttribArray(vec_position_location);
-	glEnableVertexAttribArray(vec_color_location);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(circle_data), circle_data.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(circle_indices), circle_indices, GL_STATIC_DRAW);
+	glVertexAttribPointer(vec2_vertPosition, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(vec2_vertPosition);
+	glUniform4fv(vec4_Color, 1, circle_color);
 
-	newTime = (float)glfwGetTime();
+	//main loop
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
+		glBindTexture(GL_TEXTURE_2D, texture);
 		glUseProgram(shader_program);
-		glUniform1f(scalar_time_location, newTime);
 		glBindVertexArray(vertex_array);
-		oldTime = newTime;
-		newTime = (float)glfwGetTime();
-		deltaTime = newTime - oldTime;
-		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_data), triangle_data, GL_DYNAMIC_DRAW);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		// load stuff into the buffer (buffer data then uniform)
+		glUniform4fv(vec4_Color, 1, circle_color);
+		// draw things (glDrawElements uses the indices from the bound element buffer object, in this case element_buffer)
+		glDrawElements(GL_TRIANGLES, 300, GL_UNSIGNED_INT, 0);
+		// second parameter - the number of indices specified, since opengl uses triangles, 2 triangles are needed to draw a square resulting in 6 vertices drawn
+		// fourth parameter - the offset of the indices
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 	glfwTerminate();
+	return 0;
+main_exit_err:
+	glfwTerminate();
+	return -1;
 }
