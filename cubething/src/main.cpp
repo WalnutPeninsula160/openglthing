@@ -1,10 +1,17 @@
+// regular c++ include
 #include <iostream>
 #include <cstdlib>
+// glfw and opengl include
 #define GLFW_INCLUDE_NONE
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+// stbi include
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+// glm include
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 char *read_file(const char *path) { 
 	FILE *file = std::fopen(path, "rb");
@@ -44,10 +51,6 @@ static float square_data[] = {
 	0.5f,	-0.5f,	1.f,	1.f,	0.f,
 	-0.5f,	-0.5f,	1.f,	0.f,	0.f,
 	-0.5f,	0.5f,	1.f,	0.f,	1.f
-};
-
-static float square_color[] = {
-	1.f,	0.5f,	0.2f
 };
 
 static unsigned int square_indices[] = {
@@ -160,7 +163,6 @@ int main() {
 	// configure vertex attributes (everything will be passed to the vertex shader, and then the vertex shader will pass needed values to the fragment shader)
 	// create vertex buffer object and vertex array object (and element buffer object)
 	vec3_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
-	vec3_Color = glGetUniformLocation(shader_program, "Color");
 	vec2_TexCoords = glGetAttribLocation(shader_program, "TexCoords");
 	glGenVertexArrays(1, &vertex_array);
 	glGenBuffers(1, &vertex_buffer);
@@ -174,7 +176,6 @@ int main() {
 	glVertexAttribPointer(vec2_TexCoords, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(vec3_vertPosition);
 	glEnableVertexAttribArray(vec2_TexCoords);
-	glUniform3fv(vec3_Color, 1, square_color);
 
 	// texture stuff
 	stbi_set_flip_vertically_on_load(true);
@@ -199,7 +200,6 @@ int main() {
 		glUseProgram(shader_program);
 		glBindVertexArray(vertex_array);
 		// load stuff into the buffer (buffer data then uniform)
-		glUniform3fv(vec3_Color, 1, &square_color[0]);
 		// draw things (glDrawElements uses the indices from the bound element buffer object, in this case element_buffer)
 		glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, 0);
 		// second parameter - the number of indices specified, since opengl uses triangles, 2 triangles are needed to draw a square resulting in 6 vertices drawn
