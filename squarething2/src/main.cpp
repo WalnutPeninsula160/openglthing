@@ -1,10 +1,17 @@
+// include standard c++ llibraries
 #include <iostream>
 #include <cstdlib>
+// include GLFW and OpenGL
 #define GLFW_INCLUDE_NONE
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+// include stbi
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+// include GLM
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 char *read_file(const char *path) { 
 	FILE *file = std::fopen(path, "rb");
@@ -36,10 +43,10 @@ char *read_file(const char *path) {
 
 // vec3 verts, vec2 texCoords
 static float square_data[] = {
-	1.f,	1.f,	0.f,	1.f,	1.f,
-	1.f,	-1.f,	0.f,	1.f,	0.f,
-	-1.f,	-1.f,	0.f,	0.f,	0.f,
-	-1.f,	1.f,	0.f,	0.f,	1.f
+	0.5f,	0.5f,	0.f,	1.f,	1.f,
+	0.5f,	-0.5f,	0.f,	1.f,	0.f,
+	-0.5f,	-0.5f,	0.f,	0.f,	0.f,
+	-0.5f,	0.5f,	0.f,	0.f,	1.f
 };
 
 static float square_color[] = {
@@ -81,10 +88,11 @@ int main() {
 	unsigned char *tex0_data, *tex1_data;
 	char *vert_shader_source, *frag_shader_source;
 	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer, texture1, texture2; // 
-	GLint vec3_vertPosition, vec3_Color, vec2_TexCoords, texture1_location, texture2_location; // buffer objects for shaders
+	GLint vec3_vertPosition, vec3_Color, vec2_TexCoords, texture1_location, texture2_location, mat4_trans; // buffer objects for shaders
 	int success;
 	char info[512];
 	int tex0_width, tex0_height, tex0_nrChannels, tex1_width, tex1_height, tex1_nrChannels;
+	glm::mat4 translation = glm::mat4(1.0f); // creates a 4x4 identity matrix
 	glfwSetErrorCallback(err_callback);
 	if (!glfwInit()) {
 		std::cerr << "Could not initialize glfw\n";
@@ -143,6 +151,7 @@ int main() {
 	vec3_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
 	vec3_Color = glGetUniformLocation(shader_program, "Color");
 	vec2_TexCoords = glGetAttribLocation(shader_program, "TexCoords");
+	mat4_trans = glGetAttribLocation(shader_program, "trans");
 	glGenVertexArrays(1, &vertex_array);
 	glGenBuffers(1, &vertex_buffer);
 	glGenBuffers(1, &element_buffer);
@@ -193,6 +202,12 @@ int main() {
 	glUseProgram(shader_program);
 	glUniform1i(texture1_location, 0);
 	glUniform1i(texture2_location, 1);
+
+	// apply transformations
+	//translation = glm::rotate(translation, glm::radians(90.f), glm::vec3(0.f, 0.f, 1.f));
+	translation = glm::scale(translation, glm::vec3(2.f, 2.f, 2.f));
+	// pass transformation matrix to the shaders
+	glUniformMatrix4fv(mat4_trans, 1, GL_FALSE, glm::value_ptr(translation));
 
 	//main loop
 	while (!glfwWindowShouldClose(window)) {
