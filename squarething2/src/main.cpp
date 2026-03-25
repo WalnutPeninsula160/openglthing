@@ -99,7 +99,7 @@ int main() {
 		glfwTerminate();
 		return -1;
 	}
-	GLFWwindow *window = glfwCreateWindow(600, 400, "square", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(600, 600, "square", NULL, NULL);
 	if (!window) {
 		std::cerr << "Could not create window\n";
 		goto main_exit_err;
@@ -151,7 +151,7 @@ int main() {
 	vec3_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
 	vec3_Color = glGetUniformLocation(shader_program, "Color");
 	vec2_TexCoords = glGetAttribLocation(shader_program, "TexCoords");
-	mat4_trans = glGetAttribLocation(shader_program, "trans");
+	mat4_trans = glGetUniformLocation(shader_program, "translation");
 	glGenVertexArrays(1, &vertex_array);
 	glGenBuffers(1, &vertex_buffer);
 	glGenBuffers(1, &element_buffer);
@@ -204,8 +204,8 @@ int main() {
 	glUniform1i(texture2_location, 1);
 
 	// apply transformations
-	//translation = glm::rotate(translation, glm::radians(90.f), glm::vec3(0.f, 0.f, 1.f));
-	translation = glm::scale(translation, glm::vec3(2.f, 2.f, 2.f));
+	translation = glm::rotate(translation, glm::radians(90.f), glm::vec3(0.f, 0.f, 1.f));
+	//translation = glm::scale(translation, glm::vec3(2.f, 2.f, 2.f));
 	// pass transformation matrix to the shaders
 	glUniformMatrix4fv(mat4_trans, 1, GL_FALSE, glm::value_ptr(translation));
 
@@ -219,7 +219,9 @@ int main() {
 		glBindTexture(GL_TEXTURE_2D, texture2);
 		glBindVertexArray(vertex_array);
 		// load stuff into the buffer (buffer data then uniform)
-		glUniform3fv(vec3_Color, 1, &square_color[0]);
+		translation = glm::mat4(1.f);
+		translation = glm::rotate(translation, (float)glfwGetTime(), glm::vec3(0.f, 0.f, 1.f));
+		glUniformMatrix4fv(mat4_trans, 1, GL_FALSE, glm::value_ptr(translation));
 		// draw things (glDrawElements uses the indices from the bound element buffer object, in this case element_buffer)
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		// second parameter - the number of indices specified, since opengl uses triangles, 2 triangles are needed to draw a square resulting in 6 vertices drawn
