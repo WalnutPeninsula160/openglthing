@@ -43,10 +43,10 @@ char *read_file(const char *path) {
 
 // vec3 verts, vec2 texCoords
 static float square_data[] = {
-	0.5f,	0.5f,	0.f,	1.f,	1.f,
-	0.5f,	-0.5f,	0.f,	1.f,	0.f,
-	-0.5f,	-0.5f,	0.f,	0.f,	0.f,
-	-0.5f,	0.5f,	0.f,	0.f,	1.f
+	0.5f,	0.5f,	1.f,	1.f,	1.f,
+	0.5f,	-0.5f,	1.f,	1.f,	0.f,
+	-0.5f,	-0.5f,	1.f,	0.f,	0.f,
+	-0.5f,	0.5f,	1.f,	0.f,	1.f
 };
 
 static float square_color[] = {
@@ -57,6 +57,12 @@ static unsigned int square_indices[] = {
 	0,	1,	3,
 	1,	2,	3
 };
+
+// coordinate system matrices
+// FOV, aspect ratio, near plane, far plane
+glm::mat4 model = glm::mat4(1.0f);
+glm::mat4 view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f));
+glm::mat4 projection = glm::perspective(glm::radians(45.f), 1.f, 0.1f, 100.f);
 
 void err_callback(int err, const char *desc) {
 	std::cerr << "Error: " << desc << '\n';
@@ -88,11 +94,10 @@ int main() {
 	unsigned char *tex0_data, *tex1_data;
 	char *vert_shader_source, *frag_shader_source;
 	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer, texture1, texture2; // 
-	GLint vec3_vertPosition, vec3_Color, vec2_TexCoords, texture1_location, texture2_location, mat4_trans; // buffer objects for shaders
+	GLint vec3_vertPosition, vec3_Color, vec2_TexCoords, texture1_location, texture2_location, mat4_model, mat4_view, mat4_project; // buffer objects for shaders
 	int success;
 	char info[512];
 	int tex0_width, tex0_height, tex0_nrChannels, tex1_width, tex1_height, tex1_nrChannels;
-	glm::mat4 translation = glm::mat4(1.0f); // creates a 4x4 identity matrix
 	glfwSetErrorCallback(err_callback);
 	if (!glfwInit()) {
 		std::cerr << "Could not initialize glfw\n";
@@ -151,7 +156,9 @@ int main() {
 	vec3_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
 	vec3_Color = glGetUniformLocation(shader_program, "Color");
 	vec2_TexCoords = glGetAttribLocation(shader_program, "TexCoords");
-	mat4_trans = glGetUniformLocation(shader_program, "translation");
+	mat4_model = glGetUniformLocation(shader_program, "model");
+	mat4_view = glGetUniformLocation(shader_program, "view");
+	mat4_project = glGetUniformLocation(shader_program, "project");
 	glGenVertexArrays(1, &vertex_array);
 	glGenBuffers(1, &vertex_buffer);
 	glGenBuffers(1, &element_buffer);
@@ -204,10 +211,11 @@ int main() {
 	glUniform1i(texture2_location, 1);
 
 	// apply transformations
-	translation = glm::rotate(translation, glm::radians(90.f), glm::vec3(0.f, 0.f, 1.f));
-	//translation = glm::scale(translation, glm::vec3(2.f, 2.f, 2.f));
+	;;
 	// pass transformation matrix to the shaders
-	glUniformMatrix4fv(mat4_trans, 1, GL_FALSE, glm::value_ptr(translation));
+	glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
+	glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(mat4_project, 1, GL_FALSE, glm::value_ptr(projection));
 
 	//main loop
 	while (!glfwWindowShouldClose(window)) {
@@ -219,9 +227,6 @@ int main() {
 		glBindTexture(GL_TEXTURE_2D, texture2);
 		glBindVertexArray(vertex_array);
 		// load stuff into the buffer (buffer data then uniform)
-		translation = glm::mat4(1.f);
-		translation = glm::rotate(translation, (float)glfwGetTime(), glm::vec3(0.f, 0.f, 1.f));
-		glUniformMatrix4fv(mat4_trans, 1, GL_FALSE, glm::value_ptr(translation));
 		// draw things (glDrawElements uses the indices from the bound element buffer object, in this case element_buffer)
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		// second parameter - the number of indices specified, since opengl uses triangles, 2 triangles are needed to draw a square resulting in 6 vertices drawn
