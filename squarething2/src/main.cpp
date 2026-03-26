@@ -43,10 +43,10 @@ char *read_file(const char *path) {
 
 // vec3 verts, vec2 texCoords
 static float square_data[] = {
-	0.5f,	0.5f,	1.f,	1.f,	1.f,
-	0.5f,	-0.5f,	1.f,	1.f,	0.f,
-	-0.5f,	-0.5f,	1.f,	0.f,	0.f,
-	-0.5f,	0.5f,	1.f,	0.f,	1.f
+	0.5f,	0.5f,	0.f,	1.f,	1.f,
+	0.5f,	-0.5f,	0.f,	1.f,	0.f,
+	-0.5f,	-0.5f,	0.f,	0.f,	0.f,
+	-0.5f,	0.5f,	0.f,	0.f,	1.f
 };
 
 static float square_color[] = {
@@ -61,7 +61,7 @@ static unsigned int square_indices[] = {
 // coordinate system matrices
 // FOV, aspect ratio, near plane, far plane
 glm::mat4 model = glm::mat4(1.0f);
-glm::mat4 view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f));
+glm::mat4 view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, -1.f));
 glm::mat4 projection = glm::perspective(glm::radians(45.f), 1.f, 0.1f, 100.f);
 
 void err_callback(int err, const char *desc) {
