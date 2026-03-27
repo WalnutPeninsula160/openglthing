@@ -88,6 +88,15 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 		default:
 			break;
 	}
+	switch (key) {
+		case GLFW_KEY_LEFT:
+			model = glm::rotate(model, glm::radians(1.f), glm::vec3(0.f, 1.f, 0.f));
+			break;
+		case GLFW_KEY_RIGHT:
+			model = glm::rotate(model, glm::radians(-1.f), glm::vec3(0.1, 1.f, 0.f));
+		default:
+			break;
+	}
 }
 
 static void framebuffer_siz_callback(GLFWwindow *window, int width, int height) {
