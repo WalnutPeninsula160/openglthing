@@ -75,14 +75,46 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 			case GLFW_KEY_ESCAPE:
 				glfwSetWindowShouldClose(window, GLFW_TRUE);
 				break;
+			case GLFW_KEY_W:
+				view = glm::translate(view, glm::vec3(0.f, 0.f, 0.1f));
+				break;
+			case GLFW_KEY_S:
+				view = glm::translate(view, glm::vec3(0.f, 0.f, -0.1f));
+				break;
+			case GLFW_KEY_A:
+				view = glm::translate(view, glm::vec3(-0.1f, 0.f, 0.f));
+				break;
+			case GLFW_KEY_D:
+				view = glm::translate(view, glm::vec3(0.1f, 0.f, 0.f));
+				break;
 			default:
 				break;
 		}
+		return;
+	}
+	switch (key) {
+		case GLFW_KEY_W:
+			view = glm::translate(view, glm::vec3(0.f, 0.f, 0.1f));
+			break;
+		case GLFW_KEY_S:
+			view = glm::translate(view, glm::vec3(0.f, 0.f, -0.1f));
+			break;
+		case GLFW_KEY_A:
+			view = glm::translate(view, glm::vec3(-0.1f, 0.f, 0.f));
+			break;
+		case GLFW_KEY_D:
+			view = glm::translate(view, glm::vec3(0.1f, 0.f, 0.f));
+			break;
+		case GLFW_KEY_UP:
+			model = glm::rotate(model, vlm::vec3(
+		default:
+			break;
 	}
 }
 
 static void framebuffer_siz_callback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
+	projection = glm::perspective(glm::radians(45.f), (float)width/(float)height, 0.1f, 100.f);
 }
 
 int main() {
@@ -227,6 +259,9 @@ int main() {
 		glBindTexture(GL_TEXTURE_2D, texture2);
 		glBindVertexArray(vertex_array);
 		// load stuff into the buffer (buffer data then uniform)
+		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(mat4_project, 1, GL_FALSE, glm::value_ptr(projection));
 		// draw things (glDrawElements uses the indices from the bound element buffer object, in this case element_buffer)
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		// second parameter - the number of indices specified, since opengl uses triangles, 2 triangles are needed to draw a square resulting in 6 vertices drawn
