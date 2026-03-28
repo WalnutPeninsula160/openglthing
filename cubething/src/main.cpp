@@ -12,6 +12,12 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+// other things
+#include "camera.hpp"
+
+// macro definitions
+#define CAMERA_MOVE_SPEED 0.1
+#define CAMERA_ROTATE_SPEED 0.1
 
 char *read_file(const char *path) { 
 	FILE *file = std::fopen(path, "rb");
@@ -77,24 +83,83 @@ static unsigned int square_indices[] = {
 	1,	2,	6
 };
 
+// coordinate space matrices
 glm::mat4 model = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f));
-glm::mat4 view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, -3.f));
+//glm::mat4 view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, -3.f));
 glm::mat4 projection = glm::perspective(glm::radians(45.f), (float)width/(float)height, 0.1f, 100.f);
+
+enum keybindCodes {
+	W = 0,
+	A = 1,
+	S = 2,
+	D = 3,
+	SHIFT = 4,
+	SPACE = 5,
+	UP = 6,
+	LEFT = 7,
+	DOWN = 8,
+	RIGHT = 9
+};
+
+bool keybinds[] = {
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false
+};
 
 void err_callback(int err, const char *desc) {
 	std::cerr << "Error: " << desc << '\n';
 }
 
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-	if (action == GLFW_PRESS) {
-		switch (key) {
-			case GLFW_KEY_TAB:
-			case GLFW_KEY_ESCAPE:
-				glfwSetWindowShouldClose(window, GLFW_TRUE);
-				break;
-			default:
-				break;
-		}
+	bool act = true;
+	if (key == GLFW_KEY_TAB || key == GLFW_KEY_ESCAPE) {
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+		return;
+	}
+	if (action == GLFW_RELEASE) {
+		act = false;
+	}
+	switch (key) {
+		case GLFW_KEY_W:
+			keybinds[keybindCodes::W] = act;
+			break;
+		case GLFW_KEY_A:
+			keybinds[keybindCodes::A] = act;
+			break;
+		case GLFW_KEY_S:
+			keybinds[keybindCodes::S] = act;
+			break;
+		case GLFW_KEY_D:
+			keybinds[keybindCodes::D] = act;
+			break;
+		case GLFW_KEY_LEFT_SHIFT:
+			keybinds[keybindCodes::SHIFT] = act;
+			break;
+		case GLFW_KEY_SPACE:
+			keybinds[keybindCodes::SPACE] = act;
+			break;
+		case GLFW_KEY_UP:
+			keybinds[keybindCodes::UP] = act;
+			break;
+		case GLFW_KEY_LEFT:
+			keybinds[keybindCodes::LEFT] = act;
+			break;
+		case GLFW_KEY_DOWN:
+			keybinds[keybindCodes::DOWN] = act;
+			break;
+		case GLFW_KEY_RIGHT:
+			keybinds[keybindCodes::RIGHT] = act;
+			break;
+		default:
+			break;
 	}
 }
 
@@ -102,6 +167,29 @@ static void framebuffer_siz_callback(GLFWwindow *window, int w, int h) {
 	width = w;
 	height = h;
 	glViewport(0, 0, width, height);
+}
+
+void process_keys(CAMERA *camera) {
+	if (keybinds[keybindCodes::W])
+		move_camera(camera, -1.f * camera->vec_backward, CAMERA_MOVE_SPEED);
+	if (keybinds[keybindCodes::A])
+		move_camera(camera, -1.f * camera->vec_right, CAMERA_MOVE_SPEED);
+	if (keybinds[keybindCodes::S])
+		move_camera(camera, camera->vec_backward, CAMERA_MOVE_SPEED);
+	if (keybinds[keybindCodes::D])
+		move_camera(camera, camera->vec_right, CAMERA_MOVE_SPEED);
+	if (keybinds[keybindCodes::SHIFT])
+		move_camera(camera, -1.f * camera->vec_up, CAMERA_MOVE_SPEED);
+	if (keybinds[keybindCodes::SPACE])
+		move_camera(camera, camera->vec_up, CAMERA_MOVE_SPEED);
+	if (keybinds[keybindCodes::UP])
+		rotate_camera_around_target(camera, -1.f * camera->vec_right, CAMERA_ROTATE_SPEED);
+	if (keybinds[keybindCodes::LEFT])
+		rotate_camera_around_target(camera, camera->vec_up, CAMERA_ROTATE_SPEED);
+	if (keybinds[keybindCodes::DOWN])
+		rotate_camera_around_target(camera, camera->vec_right, CAMERA_ROTATE_SPEED);
+	if (keybinds[keybindCodes::RIGHT])
+		rotate_camera_around_target(camera, -1.f *  camera->vec_up, CAMERA_ROTATE_SPEED);
 }
 
 int main() {
@@ -115,7 +203,7 @@ int main() {
 	int success;
 	char info[512];
 	int tex_width, tex_height, tex_nrChannels;
-	float newtime, oldtime, deltatime;
+	CAMERA camera;
 	glfwSetErrorCallback(err_callback);
 	if (!glfwInit()) {
 		std::cerr << "Could not initialize glfw\n";
@@ -125,14 +213,16 @@ int main() {
 	GLFWwindow *window = glfwCreateWindow(width, height, "square", NULL, NULL);
 	if (!window) {
 		std::cerr << "Could not create window\n";
-		goto main_exit_err;
+		glfwTerminate();
+		return -1;
 	}
 	glfwSetKeyCallback(window, key_callback);
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_siz_callback);
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cerr << "Coult not initialize glad\n";
-		goto main_exit_err;
+		glfwTerminate();
+		return -1;
 	}
 	glfwSwapInterval(1);
 	glfwGetFramebufferSize(window, &width, &height);
@@ -140,8 +230,10 @@ int main() {
 
 	// compile shaders
 	vert_shader_source = read_file(vert_shader_path);
-	if (!vert_shader_source)
-		goto main_exit_err;
+	if (!vert_shader_source) {
+		glfwTerminate();
+		return -1;
+	}
 	vert_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vert_shader, 1, &vert_shader_source, NULL);
 	glCompileShader(vert_shader);
@@ -152,8 +244,10 @@ int main() {
 	}
 	
 	frag_shader_source = read_file(frag_shader_path);
-	if (!frag_shader_source)
-		goto main_exit_err;
+	if (!frag_shader_source) {
+		glfwTerminate();
+		return -1;
+	}
 	frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(frag_shader, 1, &frag_shader_source, NULL);
 	glCompileShader(frag_shader);
@@ -196,7 +290,8 @@ int main() {
 	tex_data = stbi_load(tex_image_path, &tex_width, &tex_height, &tex_nrChannels, 0);
 	if (!tex_data) {
 		std::cerr << "Could not load texture\n";
-		goto main_exit_err;
+		glfwTerminate();
+		return -1;
 	}
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
@@ -207,38 +302,28 @@ int main() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data);
 	stbi_image_free(tex_data);
 
+	// set up camera
+	camera = new_camera({0, 0, -3}, {0, 0, 0});
+
 	// coordinate system matrices
 	glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
-	glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
 	glUniformMatrix4fv(mat4_projection, 1, GL_FALSE, glm::value_ptr(projection));
-	
-	for (size_t i = 0; i < 4; i++) {
-		for (size_t j = 0; j < 4; j++) {
-			std::cout << view[i][j] << '\t';
-		}
-		std:: cout << '\n';
-	}
-
-	newtime = (float)glfwGetTime();
-	deltatime = 0.f;
 
 	//main loop
 	while (!glfwWindowShouldClose(window)) {
+		process_keys(&camera);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glUseProgram(shader_program);
 		glBindVertexArray(vertex_array);
 		// deltatime
-		oldtime = newtime;
-		newtime = (float)glfwGetTime();
-		deltatime = newtime - oldtime;
 		// load stuff into the buffer (buffer data then uniform)
-		model = glm::rotate(model,  deltatime, glm::vec3(1.f, 0.f, 1.f));
 		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
 		glUniformMatrix4fv(mat4_projection, 1, GL_FALSE, glm::value_ptr(projection));
 		// draw things (glDrawElements uses the indices from the bound element buffer object, in this case element_buffer)
-		glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		// second parameter - the number of indices specified, since opengl uses triangles, 2 triangles are needed to draw a square resulting in 6 vertices drawn
 		// fourth parameter - the offset of the indices
 		glfwSwapBuffers(window);
@@ -246,7 +331,4 @@ int main() {
 	}
 	glfwTerminate();
 	return 0;
-main_exit_err:
-	glfwTerminate();
-	return -1;
 }
