@@ -41,16 +41,19 @@ char *read_file(const char *path) {
 	return result;
 }
 
+int height = 600;
+int width = 600;
+
 // vec3 verts, vec2 texCoords
 static float square_data[] = {
-	0.5f,	0.5f,	0.5f,	1.f,	1.f,
-	0.5f,	-0.5f,	0.5f,	1.f,	0.f,
-	-0.5f,	-0.5f,	0.5f,	0.f,	0.f,
-	-0.5f,	0.5f,	0.5f,	0.f,	1.f,
-	0.5f,	0.5f,	1.f,	1.f,	1.f,
-	0.5f,	-0.5f,	1.f,	1.f,	0.f,
-	-0.5f,	-0.5f,	1.f,	0.f,	0.f,
-	-0.5f,	0.5f,	1.f,	0.f,	1.f
+	0.5f,	0.5f,	0.5f,	1.f,	1.f,	// 0
+	0.5f,	-0.5f,	0.5f,	1.f,	0.f,	// 1
+	-0.5f,	-0.5f,	0.5f,	0.f,	0.f,	// 2
+	-0.5f,	0.5f,	0.5f,	0.f,	1.f,	// 3
+	0.5f,	0.5f,	-0.5f,	1.f,	0.f,	// 4
+	0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	// 5
+	-0.5f,	-0.5f,	-0.5f,	0.f,	1.f,	// 6
+	-0.5f,	0.5f,	-0.5f,	1.f,	1.f	// 7
 };
 
 static unsigned int square_indices[] = {
@@ -74,6 +77,10 @@ static unsigned int square_indices[] = {
 	1,	2,	6
 };
 
+glm::mat4 model = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f));
+glm::mat4 view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, -3.f));
+glm::mat4 projection = glm::perspective(glm::radians(45.f), (float)width/(float)height, 0.1f, 100.f);
+
 void err_callback(int err, const char *desc) {
 	std::cerr << "Error: " << desc << '\n';
 }
@@ -91,29 +98,31 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 	}
 }
 
-static void framebuffer_siz_callback(GLFWwindow *window, int width, int height) {
+static void framebuffer_siz_callback(GLFWwindow *window, int w, int h) {
+	width = w;
+	height = h;
 	glViewport(0, 0, width, height);
 }
 
 int main() {
-	int width, height;
 	const char vert_shader_path[] = "./shaders/shader.vert";
 	const char frag_shader_path[] = "./shaders/shader.frag";
 	const char tex_image_path[] = "./textures/Uzumaki-Junji-Ito.jpg";
 	unsigned char *tex_data;
 	char *vert_shader_source, *frag_shader_source;
 	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer, texture; // 
-	GLint vec3_vertPosition, vec3_Color, vec2_TexCoords; // buffer objects for shaders
+	GLint vec3_vertPosition, vec3_Color, vec2_TexCoords, mat4_model, mat4_view, mat4_projection; // buffer objects for shaders
 	int success;
 	char info[512];
 	int tex_width, tex_height, tex_nrChannels;
+	float newtime, oldtime, deltatime;
 	glfwSetErrorCallback(err_callback);
 	if (!glfwInit()) {
 		std::cerr << "Could not initialize glfw\n";
 		glfwTerminate();
 		return -1;
 	}
-	GLFWwindow *window = glfwCreateWindow(600, 400, "square", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(width, height, "square", NULL, NULL);
 	if (!window) {
 		std::cerr << "Could not create window\n";
 		goto main_exit_err;
@@ -154,6 +163,8 @@ int main() {
 		std::cerr << "Could not compile fragment shader\n" << info << '\n';
 	}
 
+	glEnable(GL_DEPTH_TEST);
+
 	// create shader program
 	shader_program = glCreateProgram();
 	glAttachShader(shader_program, vert_shader);
@@ -164,6 +175,9 @@ int main() {
 	// create vertex buffer object and vertex array object (and element buffer object)
 	vec3_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
 	vec2_TexCoords = glGetAttribLocation(shader_program, "TexCoords");
+	mat4_model = glGetUniformLocation(shader_program, "model");
+	mat4_view = glGetUniformLocation(shader_program, "view");
+	mat4_projection = glGetUniformLocation(shader_program, "projection");
 	glGenVertexArrays(1, &vertex_array);
 	glGenBuffers(1, &vertex_buffer);
 	glGenBuffers(1, &element_buffer);
@@ -193,13 +207,36 @@ int main() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data);
 	stbi_image_free(tex_data);
 
+	// coordinate system matrices
+	glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
+	glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(mat4_projection, 1, GL_FALSE, glm::value_ptr(projection));
+	
+	for (size_t i = 0; i < 4; i++) {
+		for (size_t j = 0; j < 4; j++) {
+			std::cout << view[i][j] << '\t';
+		}
+		std:: cout << '\n';
+	}
+
+	newtime = (float)glfwGetTime();
+	deltatime = 0.f;
+
 	//main loop
 	while (!glfwWindowShouldClose(window)) {
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glUseProgram(shader_program);
 		glBindVertexArray(vertex_array);
+		// deltatime
+		oldtime = newtime;
+		newtime = (float)glfwGetTime();
+		deltatime = newtime - oldtime;
 		// load stuff into the buffer (buffer data then uniform)
+		model = glm::rotate(model,  deltatime, glm::vec3(1.f, 0.f, 1.f));
+		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(mat4_projection, 1, GL_FALSE, glm::value_ptr(projection));
 		// draw things (glDrawElements uses the indices from the bound element buffer object, in this case element_buffer)
 		glDrawElements(GL_TRIANGLES, 24, GL_UNSIGNED_INT, 0);
 		// second parameter - the number of indices specified, since opengl uses triangles, 2 triangles are needed to draw a square resulting in 6 vertices drawn
