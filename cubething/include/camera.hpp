@@ -14,12 +14,15 @@ struct CAMERA {
 	glm::vec3 vec_backward;
 	glm::vec3 vec_right;
 	glm::vec3 vec_up;
+	float roll;
+	float pitch;
+	float yaw;
 };
 
 CAMERA new_camera(std::array<float, 3> pos, std::array<float, 3> target);
 
 void move_camera(CAMERA *camera, glm::vec3 direction, float speed);
 
-//void rotate_camera(CAMERA camera, glm::vec3 plane, float theta);
+void rotate_camera(CAMERA camera, float roll, float pitch, float yaw);
 
 void rotate_camera_around_target(CAMERA *camera, glm::vec3 plane, float theta);
