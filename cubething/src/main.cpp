@@ -50,9 +50,14 @@ char *read_file(const char *path) {
 int height = 600;
 int width = 600;
 
-bool firstMouse;
+bool firstMouse = true;
 float cursor_sensitivity = 0.1f;
 float deltax = 0.f, deltay = 0.f;
+
+CAMERA camera;
+
+static float lastx = (float)width/2.f;
+static float lasty = (float)height/2.f;
 
 // vec3 verts, vec2 texCoords
 static float square_data[] = {
@@ -118,6 +123,33 @@ bool keybinds[] = {
 	false
 };
 
+void process_keys(CAMERA *camera) {
+	if (keybinds[keybindCodes::W])
+		move_camera(camera, -1.f * camera->vec_backward, CAMERA_MOVE_SPEED);
+	if (keybinds[keybindCodes::A])
+		move_camera(camera, -1.f * camera->vec_right, CAMERA_MOVE_SPEED);
+	if (keybinds[keybindCodes::S])
+		move_camera(camera, camera->vec_backward, CAMERA_MOVE_SPEED);
+	if (keybinds[keybindCodes::D])
+		move_camera(camera, camera->vec_right, CAMERA_MOVE_SPEED);
+	if (keybinds[keybindCodes::SHIFT])
+		move_camera(camera, -1.f * camera->vec_up, CAMERA_MOVE_SPEED);
+	if (keybinds[keybindCodes::SPACE])
+		move_camera(camera, camera->vec_up, CAMERA_MOVE_SPEED);
+	if (keybinds[keybindCodes::UP])
+		rotate_camera_around_target(camera, -1.f * camera->vec_right, CAMERA_ROTATE_SPEED);
+	if (keybinds[keybindCodes::LEFT])
+		rotate_camera_around_target(camera, camera->vec_up, CAMERA_ROTATE_SPEED);
+	if (keybinds[keybindCodes::DOWN])
+		rotate_camera_around_target(camera, camera->vec_right, CAMERA_ROTATE_SPEED);
+	if (keybinds[keybindCodes::RIGHT])
+		rotate_camera_around_target(camera, -1.f *  camera->vec_up, CAMERA_ROTATE_SPEED);
+}
+
+void process_cursor(CAMERA *camera) {
+	rotate_camera(camera, 0.f, deltay, deltax);
+}
+
 void err_callback(int err, const char *desc) {
 	std::cerr << "Error: " << desc << '\n';
 }
@@ -174,47 +206,20 @@ static void framebuffer_siz_callback(GLFWwindow *window, int w, int h) {
 }
 
 static void cursor_callback(GLFWwindow *window, double x, double y) {
-	static float lastx = (float)width/2.f, lasty = (float)height/2.f;
 	if (firstMouse) {
-		lastx = x;
-		lasty = y;
+		lastx = (float)x;
+		lasty = (float)y;
 		firstMouse = false;
 	}
-	deltax = x - lastx;
-	deltay = lasty - y;
-	lastx = x;
-	lasty = y;
+	deltax = (float)x - lastx;
+	deltay = lasty - (float)y;
+	lastx = (float)x;
+	lasty = (float)y;
 	deltax *= cursor_sensitivity;
 	deltay *= cursor_sensitivity;
+	process_cursor(&camera);
 }
 
-void process_keys(CAMERA *camera) {
-	if (keybinds[keybindCodes::W])
-		move_camera(camera, -1.f * camera->vec_backward, CAMERA_MOVE_SPEED);
-	if (keybinds[keybindCodes::A])
-		move_camera(camera, -1.f * camera->vec_right, CAMERA_MOVE_SPEED);
-	if (keybinds[keybindCodes::S])
-		move_camera(camera, camera->vec_backward, CAMERA_MOVE_SPEED);
-	if (keybinds[keybindCodes::D])
-		move_camera(camera, camera->vec_right, CAMERA_MOVE_SPEED);
-	if (keybinds[keybindCodes::SHIFT])
-		move_camera(camera, -1.f * camera->vec_up, CAMERA_MOVE_SPEED);
-	if (keybinds[keybindCodes::SPACE])
-		move_camera(camera, camera->vec_up, CAMERA_MOVE_SPEED);
-	if (keybinds[keybindCodes::UP])
-		rotate_camera_around_target(camera, -1.f * camera->vec_right, CAMERA_ROTATE_SPEED);
-	if (keybinds[keybindCodes::LEFT])
-		rotate_camera_around_target(camera, camera->vec_up, CAMERA_ROTATE_SPEED);
-	if (keybinds[keybindCodes::DOWN])
-		rotate_camera_around_target(camera, camera->vec_right, CAMERA_ROTATE_SPEED);
-	if (keybinds[keybindCodes::RIGHT])
-		rotate_camera_around_target(camera, -1.f *  camera->vec_up, CAMERA_ROTATE_SPEED);
-}
-
-void process_cursor(CAMERA *camera) {
-	rotate_camera(camera, 0.f, deltay, deltax);
-	std::cout << deltax << '\t' << deltay << '\n';
-}
 
 int main() {
 	const char vert_shader_path[] = "./shaders/shader.vert";
@@ -227,7 +232,6 @@ int main() {
 	int success;
 	char info[512];
 	int tex_width, tex_height, tex_nrChannels;
-	CAMERA camera;
 	glfwSetErrorCallback(err_callback);
 	if (!glfwInit()) {
 		std::cerr << "Could not initialize glfw\n";
@@ -339,7 +343,6 @@ int main() {
 	//main loop
 	while (!glfwWindowShouldClose(window)) {
 		process_keys(&camera);
-		process_cursor(&camera);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glUseProgram(shader_program);

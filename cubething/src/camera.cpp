@@ -1,6 +1,7 @@
 #include "camera.hpp"
 #include <array>
 #include <cmath>
+#include <iostream>
 
 CAMERA new_camera(std::array<float, 3> pos, std::array<float, 3> target) {
 	CAMERA *result = new CAMERA;
@@ -10,7 +11,7 @@ CAMERA new_camera(std::array<float, 3> pos, std::array<float, 3> target) {
 	result->vec_right = glm::normalize(glm::cross(glm::vec3(0.f, 1.f, 0.f), result->vec_backward));
 	result->vec_up = glm::cross(result->vec_backward, result->vec_right);
 	result->view = glm::lookAt(result->position, result->target, result->vec_up);
-	result->yaw = -90.f;
+	result->yaw = 90.f;
 	return *result;
 }
 
@@ -23,6 +24,7 @@ void move_camera(CAMERA *camera, glm::vec3 direction, float speed) {
 }
 
 void rotate_camera(CAMERA *camera, float delta_roll, float delta_pitch, float delta_yaw) {
+	glm::vec3 front;
 	camera->roll += delta_roll;
 	camera->pitch += delta_pitch;
 	camera->yaw += delta_yaw;
@@ -30,11 +32,13 @@ void rotate_camera(CAMERA *camera, float delta_roll, float delta_pitch, float de
 		camera->pitch = 89.0f;
 	if (camera->pitch < -89.f)
 		camera->pitch = -89.f;
-	camera->vec_backward.x = std::cosf(glm::radians(camera->yaw)) * std::cosf(glm::radians(camera->pitch));
-	camera->vec_backward.y = std::sinf(glm::radians(camera->pitch));
-	camera->vec_backward.z = std::sinf(glm::radians(camera->yaw)) * std::cosf(glm::radians(camera->pitch));
+	front.x = std::cosf(glm::radians(camera->yaw)) * std::cosf(glm::radians(camera->pitch));
+	front.y = std::sinf(glm::radians(camera->pitch));
+	front.z = std::sinf(glm::radians(camera->yaw)) * std::cosf(glm::radians(camera->pitch));
+	camera->vec_backward = glm::normalize(-front);
 	camera->vec_right = glm::normalize(glm::cross(glm::vec3(0.f, 1.f, 0.f), camera->vec_backward));
 	camera->vec_up = glm::cross(camera->vec_backward, camera->vec_right);
+	camera->view = glm::lookAt(camera->position, camera->position + front, camera->vec_up);
 }
 
 void rotate_camera_around_target(CAMERA *camera, glm::vec3 plane_normal, float theta) {
