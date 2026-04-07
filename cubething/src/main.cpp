@@ -50,6 +50,10 @@ char *read_file(const char *path) {
 int height = 600;
 int width = 600;
 
+bool firstMouse;
+float cursor_sensitivity = 0.1f;
+float deltax = 0.f, deltay = 0.f;
+
 // vec3 verts, vec2 texCoords
 static float square_data[] = {
 	0.5f,	0.5f,	0.5f,	1.f,	1.f,	// 0
@@ -169,6 +173,21 @@ static void framebuffer_siz_callback(GLFWwindow *window, int w, int h) {
 	glViewport(0, 0, width, height);
 }
 
+static void cursor_callback(GLFWwindow *window, double x, double y) {
+	static float lastx = (float)width/2.f, lasty = (float)height/2.f;
+	if (firstMouse) {
+		lastx = x;
+		lasty = y;
+		firstMouse = false;
+	}
+	deltax = x - lastx;
+	deltay = lasty - y;
+	lastx = x;
+	lasty = y;
+	deltax *= cursor_sensitivity;
+	deltay *= cursor_sensitivity;
+}
+
 void process_keys(CAMERA *camera) {
 	if (keybinds[keybindCodes::W])
 		move_camera(camera, -1.f * camera->vec_backward, CAMERA_MOVE_SPEED);
@@ -190,6 +209,11 @@ void process_keys(CAMERA *camera) {
 		rotate_camera_around_target(camera, camera->vec_right, CAMERA_ROTATE_SPEED);
 	if (keybinds[keybindCodes::RIGHT])
 		rotate_camera_around_target(camera, -1.f *  camera->vec_up, CAMERA_ROTATE_SPEED);
+}
+
+void process_cursor(CAMERA *camera) {
+	rotate_camera(camera, 0.f, deltay, deltax);
+	std::cout << deltax << '\t' << deltay << '\n';
 }
 
 int main() {
@@ -216,6 +240,8 @@ int main() {
 		glfwTerminate();
 		return -1;
 	}
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetCursorPosCallback(window, cursor_callback);
 	glfwSetKeyCallback(window, key_callback);
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_siz_callback);
@@ -313,6 +339,7 @@ int main() {
 	//main loop
 	while (!glfwWindowShouldClose(window)) {
 		process_keys(&camera);
+		process_cursor(&camera);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glUseProgram(shader_program);

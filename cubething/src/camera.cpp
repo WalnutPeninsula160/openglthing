@@ -22,10 +22,19 @@ void move_camera(CAMERA *camera, glm::vec3 direction, float speed) {
 	camera->view = glm::lookAt(camera->position, camera->target, camera->vec_up);
 }
 
-void rotate_camera(CAMERA *camera, float roll, float pitch, float yaw) {
-	camera->vec_backward.x = std::cosf(glm::radians(yaw)) * std::cosf(glm::radians(pitch));
-	camera->vec_backward.y = std::sinf(glm::radians(pitch));
-	camera->vec_backward.z = std::sinf(glm::radians(yaw)) * std::cosf(glm::radians(pitch));
+void rotate_camera(CAMERA *camera, float delta_roll, float delta_pitch, float delta_yaw) {
+	camera->roll += delta_roll;
+	camera->pitch += delta_pitch;
+	camera->yaw += delta_yaw;
+	if (camera->pitch > 89.f)
+		camera->pitch = 89.0f;
+	if (camera->pitch < -89.f)
+		camera->pitch = -89.f;
+	camera->vec_backward.x = std::cosf(glm::radians(camera->yaw)) * std::cosf(glm::radians(camera->pitch));
+	camera->vec_backward.y = std::sinf(glm::radians(camera->pitch));
+	camera->vec_backward.z = std::sinf(glm::radians(camera->yaw)) * std::cosf(glm::radians(camera->pitch));
+	camera->vec_right = glm::normalize(glm::cross(glm::vec3(0.f, 1.f, 0.f), camera->vec_backward));
+	camera->vec_up = glm::cross(camera->vec_backward, camera->vec_right);
 }
 
 void rotate_camera_around_target(CAMERA *camera, glm::vec3 plane_normal, float theta) {

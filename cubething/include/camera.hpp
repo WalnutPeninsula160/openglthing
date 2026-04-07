@@ -23,6 +23,6 @@ CAMERA new_camera(std::array<float, 3> pos, std::array<float, 3> target);
 
 void move_camera(CAMERA *camera, glm::vec3 direction, float speed);
 
-void rotate_camera(CAMERA camera, float roll, float pitch, float yaw);
+void rotate_camera(CAMERA *camera, float delta_roll, float delta_pitch, float delta_yaw);
 
 void rotate_camera_around_target(CAMERA *camera, glm::vec3 plane, float theta);
