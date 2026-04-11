@@ -125,25 +125,17 @@ bool keybinds[] = {
 
 void process_keys(CAMERA *camera) {
 	if (keybinds[keybindCodes::W])
-		move_camera(camera, -1.f * camera->vec_backward, CAMERA_MOVE_SPEED);
+		camera->position -= camera->vec_backward * CAMERA_MOVE_SPEED;
 	if (keybinds[keybindCodes::A])
-		move_camera(camera, -1.f * camera->vec_right, CAMERA_MOVE_SPEED);
+		camera->position -= camera->vec_right * CAMERA_MOVE_SPEED;
 	if (keybinds[keybindCodes::S])
-		move_camera(camera, camera->vec_backward, CAMERA_MOVE_SPEED);
+		camera->position += camera->vec_backward * CAMERA_MOVE_SPEED;
 	if (keybinds[keybindCodes::D])
-		move_camera(camera, camera->vec_right, CAMERA_MOVE_SPEED);
+		camera->position += camera->vec_right * CAMERA_MOVE_SPEED;
 	if (keybinds[keybindCodes::SHIFT])
-		move_camera(camera, -1.f * camera->vec_up, CAMERA_MOVE_SPEED);
+		camera->positoin -= glm::vec3(0.f, 0.f, 1.f);
 	if (keybinds[keybindCodes::SPACE])
-		move_camera(camera, camera->vec_up, CAMERA_MOVE_SPEED);
-	if (keybinds[keybindCodes::UP])
-		rotate_camera_around_target(camera, -1.f * camera->vec_right, CAMERA_ROTATE_SPEED);
-	if (keybinds[keybindCodes::LEFT])
-		rotate_camera_around_target(camera, camera->vec_up, CAMERA_ROTATE_SPEED);
-	if (keybinds[keybindCodes::DOWN])
-		rotate_camera_around_target(camera, camera->vec_right, CAMERA_ROTATE_SPEED);
-	if (keybinds[keybindCodes::RIGHT])
-		rotate_camera_around_target(camera, -1.f *  camera->vec_up, CAMERA_ROTATE_SPEED);
+		camera->position += glm::vec3(0.f, 0.f, 1.f);
 }
 
 void process_cursor(CAMERA *camera) {
