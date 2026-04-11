@@ -16,11 +16,10 @@ CAMERA new_camera(std::array<float, 3> pos, std::array<float, 3> target) {
 }
 
 
-void move_camera(CAMERA *camera, glm::vec3 direction, float speed) {
-	direction = glm::normalize(direction) * speed;
+void move_camera(CAMERA *camera, glm::vec3 direction) {
 	camera->position += direction;
 	camera->target += direction;
-	camera->view = glm::lookAt(camera->position, camera->target, camera->vec_up);
+	camera->view = glm::lookAt(camera->position, camera->position - camera->vec_backward, camera->vec_up);
 }
 
 void rotate_camera(CAMERA *camera, float delta_roll, float delta_pitch, float delta_yaw) {

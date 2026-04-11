@@ -21,7 +21,7 @@ struct CAMERA {
 
 CAMERA new_camera(std::array<float, 3> pos, std::array<float, 3> target);
 
-void move_camera(CAMERA *camera, glm::vec3 direction, float speed);
+void move_camera(CAMERA *camera, glm::vec3 direction);
 
 void rotate_camera(CAMERA *camera, float delta_roll, float delta_pitch, float delta_yaw);
 

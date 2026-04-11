@@ -125,17 +125,17 @@ bool keybinds[] = {
 
 void process_keys(CAMERA *camera) {
 	if (keybinds[keybindCodes::W])
-		camera->position -= camera->vec_backward * CAMERA_MOVE_SPEED;
+		move_camera(camera, -0.05f * camera->vec_backward);
 	if (keybinds[keybindCodes::A])
-		camera->position -= camera->vec_right * CAMERA_MOVE_SPEED;
+		move_camera(camera, -0.05f * camera->vec_right);
 	if (keybinds[keybindCodes::S])
-		camera->position += camera->vec_backward * CAMERA_MOVE_SPEED;
+		move_camera(camera, 0.05f * camera->vec_backward);
 	if (keybinds[keybindCodes::D])
-		camera->position += camera->vec_right * CAMERA_MOVE_SPEED;
+		move_camera(camera, 0.05f * camera->vec_right);
 	if (keybinds[keybindCodes::SHIFT])
-		camera->positoin -= glm::vec3(0.f, 0.f, 1.f);
+		move_camera(camera, glm::vec3(0.f, -0.05f, 0.f));
 	if (keybinds[keybindCodes::SPACE])
-		camera->position += glm::vec3(0.f, 0.f, 1.f);
+		move_camera(camera, glm::vec3(0.f, 0.05f, 0.f));
 }
 
 void process_cursor(CAMERA *camera) {
@@ -195,6 +195,8 @@ static void framebuffer_siz_callback(GLFWwindow *window, int w, int h) {
 	width = w;
 	height = h;
 	glViewport(0, 0, width, height);
+	projection = glm::perspective(glm::radians(45.f), (float)width/(float)height, 0.1f, 100.f);
+
 }
 
 static void cursor_callback(GLFWwindow *window, double x, double y) {
