@@ -92,6 +92,15 @@ static unsigned int square_indices[] = {
 	1,	2,	6
 };
 
+static float square_color[] = {
+	1.f, 0.5f, 0.f
+};
+
+// r, g, b, strength
+static float ambient_light_color[] = {
+	0.5f, 0.f, 1.f, 0.5f
+};
+
 // coordinate space matrices
 glm::mat4 model = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f));
 //glm::mat4 view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, -3.f));
@@ -123,23 +132,19 @@ bool keybinds[] = {
 	false
 };
 
-void process_keys(CAMERA *camera) {
+void process_keys(CAMERA *camera, float dt){
 	if (keybinds[keybindCodes::W])
-		move_camera(camera, -0.05f * camera->vec_backward);
+		move_camera(camera, -dt * 2.f * camera->vec_backward);
 	if (keybinds[keybindCodes::A])
-		move_camera(camera, -0.05f * camera->vec_right);
+		move_camera(camera, -dt * 2.f * camera->vec_right);
 	if (keybinds[keybindCodes::S])
-		move_camera(camera, 0.05f * camera->vec_backward);
+		move_camera(camera, dt * 2.f * camera->vec_backward);
 	if (keybinds[keybindCodes::D])
-		move_camera(camera, 0.05f * camera->vec_right);
+		move_camera(camera, dt * 2.f * camera->vec_right);
 	if (keybinds[keybindCodes::SHIFT])
-		move_camera(camera, glm::vec3(0.f, -0.05f, 0.f));
+		move_camera(camera, glm::vec3(0.f, -dt * 2.f, 0.f));
 	if (keybinds[keybindCodes::SPACE])
-		move_camera(camera, glm::vec3(0.f, 0.05f, 0.f));
-}
-
-void process_cursor(CAMERA *camera) {
-	rotate_camera(camera, 0.f, deltay, deltax);
+		move_camera(camera, glm::vec3(0.f, dt * 2.f, 0.f));
 }
 
 void err_callback(int err, const char *desc) {
@@ -211,7 +216,7 @@ static void cursor_callback(GLFWwindow *window, double x, double y) {
 	lasty = (float)y;
 	deltax *= cursor_sensitivity;
 	deltay *= cursor_sensitivity;
-	process_cursor(&camera);
+	rotate_camera(&camera, 0.f, deltay, deltax);
 }
 
 
@@ -222,10 +227,11 @@ int main() {
 	unsigned char *tex_data;
 	char *vert_shader_source, *frag_shader_source;
 	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer, texture; // 
-	GLint vec3_vertPosition, vec3_Color, vec2_TexCoords, mat4_model, mat4_view, mat4_projection; // buffer objects for shaders
+	GLint vec3_vertPosition, vec3_Color, vec2_TexCoords, vec4_AmbientLightColor, float_AmbientLightStrength, mat4_model, mat4_view, mat4_projection; // buffer objects for shaders
 	int success;
 	char info[512];
 	int tex_width, tex_height, tex_nrChannels;
+	float oldtime, newtime, deltatime;
 	glfwSetErrorCallback(err_callback);
 	if (!glfwInit()) {
 		std::cerr << "Could not initialize glfw\n";
@@ -293,6 +299,7 @@ int main() {
 	// create vertex buffer object and vertex array object (and element buffer object)
 	vec3_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
 	vec2_TexCoords = glGetAttribLocation(shader_program, "TexCoords");
+	vec4_AmbientLightColor = glGetUniformLocation(shader_program, "AmbientLightColor");
 	mat4_model = glGetUniformLocation(shader_program, "model");
 	mat4_view = glGetUniformLocation(shader_program, "view");
 	mat4_projection = glGetUniformLocation(shader_program, "projection");
@@ -327,22 +334,32 @@ int main() {
 	stbi_image_free(tex_data);
 
 	// set up camera
-	camera = new_camera({0, 0, -3}, {0, 0, 0});
+	new_camera(&camera, {3, 2, -3}, {0, 0, 0});
 
 	// coordinate system matrices
 	glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 	glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
 	glUniformMatrix4fv(mat4_projection, 1, GL_FALSE, glm::value_ptr(projection));
 
+	// unchanged uniforms
+	glUniform3fv(vec3_Color, 1, square_color);
+	glUniform4fv(vec4_AmbientLightColor, 1, ambient_light_color);
+
 	//main loop
 	while (!glfwWindowShouldClose(window)) {
-		process_keys(&camera);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glUseProgram(shader_program);
 		glBindVertexArray(vertex_array);
 		// deltatime
+		oldtime = newtime;
+		newtime = (float)glfwGetTime();
+		deltatime = newtime - oldtime;
+		// process input
+		process_keys(&camera, deltatime);
 		// load stuff into the buffer (buffer data then uniform)
+		glUniform3fv(vec3_Color, 1, square_color);
+		glUniform4fv(vec4_AmbientLightColor, 1, ambient_light_color);
 		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
 		glUniformMatrix4fv(mat4_projection, 1, GL_FALSE, glm::value_ptr(projection));

@@ -3,15 +3,14 @@
 #include <cmath>
 #include <iostream>
 
-CAMERA new_camera(std::array<float, 3> pos, std::array<float, 3> target) {
-	CAMERA *result = new CAMERA;
+CAMERA new_camera(CAMERA *result, std::array<float, 3> pos, std::array<float, 3> target) {
 	result->position = glm::make_vec3(pos.data());
-	result->target = glm::make_vec3(target.data());
-	result->vec_backward = glm::normalize(result->position - result->target);
+	result->vec_backward = glm::normalize(result->position - glm::make_vec3(target.data()));
 	result->vec_right = glm::normalize(glm::cross(glm::vec3(0.f, 1.f, 0.f), result->vec_backward));
 	result->vec_up = glm::cross(result->vec_backward, result->vec_right);
-	result->view = glm::lookAt(result->position, result->target, result->vec_up);
-	result->yaw = 90.f;
+	result->view = glm::lookAt(result->position, result->position - result->vec_backward, result->vec_up);
+	result->pitch = glm::degrees(std::atan2f(-result->vec_backward.y, std::sqrtf(result->vec_backward.x * result->vec_backward.x + result->vec_backward.z * result->vec_backward.z)));
+	result->yaw = glm::degrees(std::atan2f(-result->vec_backward.z, -result->vec_backward.x));
 	return *result;
 }
 

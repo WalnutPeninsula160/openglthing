@@ -19,7 +19,7 @@ struct CAMERA {
 	float yaw;
 };
 
-CAMERA new_camera(std::array<float, 3> pos, std::array<float, 3> target);
+CAMERA new_camera(CAMERA *camera, std::array<float, 3> pos, std::array<float, 3> target);
 
 void move_camera(CAMERA *camera, glm::vec3 direction);
 

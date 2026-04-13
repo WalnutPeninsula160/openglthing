@@ -2,11 +2,11 @@
 in vec2 fragTexCoords;
 
 uniform vec3 Color;
+uniform vec4 AmbientLightColor;
 uniform sampler2D TEX;
 
 out vec4 FragColor;
 void main()
 {
-	FragColor = texture(TEX, fragTexCoords);
-	FragColor.a = 0.2;
+	FragColor = AmbientLightColor * texture(TEX, fragTexCoords);
 }
