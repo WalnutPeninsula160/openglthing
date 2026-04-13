@@ -59,46 +59,76 @@ CAMERA camera;
 static float lastx = (float)width/2.f;
 static float lasty = (float)height/2.f;
 
-// vec3 verts, vec2 texCoords
+// vec3 verts, vec2 texCoords, vec3 normal
 static float square_data[] = {
-	0.5f,	0.5f,	0.5f,	1.f,	1.f,	// 0
-	0.5f,	-0.5f,	0.5f,	1.f,	0.f,	// 1
-	-0.5f,	-0.5f,	0.5f,	0.f,	0.f,	// 2
-	-0.5f,	0.5f,	0.5f,	0.f,	1.f,	// 3
-	0.5f,	0.5f,	-0.5f,	1.f,	0.f,	// 4
-	0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	// 5
-	-0.5f,	-0.5f,	-0.5f,	0.f,	1.f,	// 6
-	-0.5f,	0.5f,	-0.5f,	1.f,	1.f	// 7
+	// close face
+	0.5f,	0.5f,	-0.5f,	1.f,	1.f,	0.f,	0.f,	-1.f,	// close top right
+	0.5f,	-0.5f,	-0.5f,	1.f,	0.f,	0.f,	0.f,	-1.f,	// close bottom right
+	-0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	0.f,	0.f,	-1.f,	// close bottom left
+	-0.5f,	0.5f,	-0.5f,	0.f,	1.f,	0.f,	0.f,	-1.f,	// close top left
+	// far face
+	-0.5f,	-0.5f,	0.5f,	1.f,	1.f,	0.f,	0.f,	1.f,	// far bottom left
+	-0.5f,	0.5f,	0.5f,	1.f,	0.f,	0.f,	0.f,	1.f,	// far top left
+	0.5f,	0.5f,	0.5f,	0.f,	0.f,	0.f,	0.f,	1.f,	// far top right
+	0.5f,	-0.5f,	0.5f,	0.f,	1.f,	0.f,	0.f,	1.f,	// far bottom right
+	// top face
+	0.5f,	0.5f,	0.5f,	1.f,	1.f,	0.f,	1.f,	0.f,	// far top right
+	0.5f,	0.5f,	-0.5f,	1.f,	0.f,	0.f,	1.f,	0.f,	// close top right
+	-0.5f,	0.5f,	-0.5f,	0.f,	0.f,	0.f,	1.f,	0.f,	// close top left
+	-0.5f,	0.5f,	0.5f,	0.f,	1.f,	0.f,	1.f,	0.f,	// far top left
+	// bottom face
+	0.5f,	-0.5f,	-0.5f,	1.f,	1.f,	0.f,	-1.f,	0.f,	// close bottom right
+	0.5f,	-0.5f,	0.5f,	1.f,	0.f,	0.f,	-1.f,	0.f,	// far bottom right
+	-0.5f,	-0.5f,	0.5f,	0.f,	0.f,	0.f,	-1.f,	0.f,	// far bottom left
+	-0.5f,	-0.5f,	-0.5f,	0.f,	1.f,	0.f,	-1.f,	0.f,	// close bottom left
+	// left face
+	-0.5f,	0.5f,	0.5f,	1.f,	1.f,	-1.f,	0.f,	0.f,	// far top left
+	-0.5f,	0.5f,	-0.5f,	1.f,	0.f,	-1.f,	0.f,	0.f,	// close top left
+	-0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	-1.f,	0.f,	0.f,	// close bottom left
+	-0.5f,	-0.5f,	0.5f,	0.f,	1.f,	-1.f,	0.f,	0.f,	// far bottom left
+	// right face
+	0.5f,	-0.5f,	0.5f,	1.f,	1.f,	1.f,	0.f,	0.f,	// far bottom right
+	0.5f,	-0.5f,	-0.5f,	1.f,	0.f,	1.f,	0.f,	0.f,	// close bottom right
+	0.5f,	0.5f,	-0.5f,	0.f,	0.f,	1.f,	0.f,	0.f,	// close top right
+	0.5f,	0.5f,	0.5f,	0.f,	1.f,	1.f,	0.f,	0.f,	// far top right
 };
 
 static unsigned int square_indices[] = {
-	// front
+	// close
 	0,	1,	3,
 	1,	2,	3,
-	// right
-	4,	5,	0,
-	5,	1,	0,
-	// back
-	7,	6,	4,
-	6,	5,	4,
+	// far
+	4,	5,	7,
+	5,	6,	7,
+	// top
+	8,	9,	11,
+	9,	10,	11,
+	// bottom
+	12,	13,	15,
+	13,	14,	15,
 	// left
-	7,	6,	3,
-	6,	2,	3,
-	// up
-	4,	0,	7,
-	0,	3,	7,
-	// down
-	5,	1,	6,
-	1,	2,	6
+	16,	17,	19,
+	17,	18,	19,
+	// right
+	20,	21,	23,
+	21,	22,	23
 };
 
 static float square_color[] = {
-	1.f, 0.5f, 0.f
+	1.f,	0.5f,	0.f
 };
 
 // r, g, b, strength
 static float ambient_light_color[] = {
-	0.5f, 0.f, 1.f, 0.5f
+	0.5f,	0.f,	1.f
+};
+
+static float light_pos[] = {
+	1.f,	2.f,	3.f
+};
+
+static float light_color[] = {
+	1.f,	1.f,	1.f
 };
 
 // coordinate space matrices
@@ -227,7 +257,7 @@ int main() {
 	unsigned char *tex_data;
 	char *vert_shader_source, *frag_shader_source;
 	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer, texture; // 
-	GLint vec3_vertPosition, vec3_Color, vec2_TexCoords, vec4_AmbientLightColor, float_AmbientLightStrength, mat4_model, mat4_view, mat4_projection; // buffer objects for shaders
+	GLint vec3_vertPosition, vec3_Color, vec2_TexCoords, vec3_AmbientLightColor, vec3_LightPos, vec3_vertNormal, vec3_LightColor, mat4_model, mat4_view, mat4_projection; // buffer objects for shaders
 	int success;
 	char info[512];
 	int tex_width, tex_height, tex_nrChannels;
@@ -299,7 +329,10 @@ int main() {
 	// create vertex buffer object and vertex array object (and element buffer object)
 	vec3_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
 	vec2_TexCoords = glGetAttribLocation(shader_program, "TexCoords");
-	vec4_AmbientLightColor = glGetUniformLocation(shader_program, "AmbientLightColor");
+	vec3_vertNormal = glGetAttribLocation(shader_program, "vertNormal");
+	vec3_AmbientLightColor = glGetUniformLocation(shader_program, "AmbientLightColor");
+	vec3_LightPos = glGetUniformLocation(shader_program, "LightPos");
+	vec3_LightColor = glGetUniformLocation(shader_program, "LightColor");
 	mat4_model = glGetUniformLocation(shader_program, "model");
 	mat4_view = glGetUniformLocation(shader_program, "view");
 	mat4_projection = glGetUniformLocation(shader_program, "projection");
@@ -311,10 +344,12 @@ int main() {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(square_data), square_data, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(square_indices), square_indices, GL_STATIC_DRAW);
-	glVertexAttribPointer(vec3_vertPosition, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glVertexAttribPointer(vec2_TexCoords, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(vec3_vertPosition, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(vec2_TexCoords, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(vec3_vertNormal, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(vec3_vertPosition);
 	glEnableVertexAttribArray(vec2_TexCoords);
+	glEnableVertexAttribArray(vec3_vertNormal);
 
 	// texture stuff
 	stbi_set_flip_vertically_on_load(true);
@@ -343,7 +378,9 @@ int main() {
 
 	// unchanged uniforms
 	glUniform3fv(vec3_Color, 1, square_color);
-	glUniform4fv(vec4_AmbientLightColor, 1, ambient_light_color);
+	glUniform3fv(vec3_AmbientLightColor, 1, ambient_light_color);
+	glUniform3fv(vec3_LightPos, 1, light_pos);
+	glUniform3fv(vec3_LightColor, 1, light_color);
 
 	//main loop
 	while (!glfwWindowShouldClose(window)) {
@@ -359,7 +396,9 @@ int main() {
 		process_keys(&camera, deltatime);
 		// load stuff into the buffer (buffer data then uniform)
 		glUniform3fv(vec3_Color, 1, square_color);
-		glUniform4fv(vec4_AmbientLightColor, 1, ambient_light_color);
+		glUniform3fv(vec3_AmbientLightColor, 1, ambient_light_color);
+		glUniform3fv(vec3_LightPos, 1, light_pos);
+		glUniform3fv(vec3_LightColor, 1, light_color);
 		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
 		glUniformMatrix4fv(mat4_projection, 1, GL_FALSE, glm::value_ptr(projection));
