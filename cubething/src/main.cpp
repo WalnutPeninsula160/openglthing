@@ -387,7 +387,7 @@ int main() {
 	glUniform3fv(vec3_LightColor, 1, light_color);
 	glUniform1f(float_AmbientStrength, 0.2f);
 	glUniform1f(float_LightStrength, 0.1f);
-	glUniform1f(float_SpecularStrength, 0.5f);
+	glUniform1f(float_SpecularStrength, 0.6f);
 	glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 
 	//main loop
@@ -409,7 +409,7 @@ int main() {
 		glUniform3fv(vec3_LightColor, 1, light_color);
 		glUniform1f(float_AmbientStrength, 0.2f);
 		glUniform1f(float_LightStrength, 0.1f);
-		glUniform1f(float_SpecularStrength, 0.5f);
+		glUniform1f(float_SpecularStrength, 0.6f);
 		glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
