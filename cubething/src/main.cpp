@@ -119,12 +119,12 @@ static float square_color[] = {
 };
 
 // r, g, b, strength
-static float ambient_light_color[] = {
+static float ambient_color[] = {
 	0.5f,	0.f,	1.f
 };
 
 static float light_pos[] = {
-	1.f,	2.f,	3.f
+	1.f,	1.f,	-2.f
 };
 
 static float light_color[] = {
@@ -257,7 +257,7 @@ int main() {
 	unsigned char *tex_data;
 	char *vert_shader_source, *frag_shader_source;
 	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer, texture; // 
-	GLint vec3_vertPosition, vec3_Color, vec2_TexCoords, vec3_AmbientLightColor, vec3_LightPos, vec3_vertNormal, vec3_LightColor, mat4_model, mat4_view, mat4_projection; // buffer objects for shaders
+	GLint vec3_vertPosition, vec3_Color, vec2_TexCoords, vec3_AmbientColor, vec3_LightPos, vec3_vertNormal, vec3_LightColor, float_AmbientStrength, float_LightStrength, float_SpecularStrength, vec3_CameraPosition, mat4_model, mat4_view, mat4_projection; // buffer objects for shaders
 	int success;
 	char info[512];
 	int tex_width, tex_height, tex_nrChannels;
@@ -330,9 +330,13 @@ int main() {
 	vec3_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
 	vec2_TexCoords = glGetAttribLocation(shader_program, "TexCoords");
 	vec3_vertNormal = glGetAttribLocation(shader_program, "vertNormal");
-	vec3_AmbientLightColor = glGetUniformLocation(shader_program, "AmbientLightColor");
+	vec3_AmbientColor = glGetUniformLocation(shader_program, "AmbientColor");
+	float_AmbientStrength = glGetUniformLocation(shader_program, "AmbientStrength");
 	vec3_LightPos = glGetUniformLocation(shader_program, "LightPos");
 	vec3_LightColor = glGetUniformLocation(shader_program, "LightColor");
+	float_LightStrength = glGetUniformLocation(shader_program, "LightStrength");
+	float_SpecularStrength = glGetUniformLocation(shader_program, "SpecularStrength");
+	vec3_CameraPosition = glGetUniformLocation(shader_program, "CameraPosition");
 	mat4_model = glGetUniformLocation(shader_program, "model");
 	mat4_view = glGetUniformLocation(shader_program, "view");
 	mat4_projection = glGetUniformLocation(shader_program, "projection");
@@ -369,7 +373,7 @@ int main() {
 	stbi_image_free(tex_data);
 
 	// set up camera
-	new_camera(&camera, {3, 2, -3}, {0, 0, 0});
+	new_camera(&camera, {0, 0, -3}, {0, 0, 0});
 
 	// coordinate system matrices
 	glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
@@ -378,9 +382,13 @@ int main() {
 
 	// unchanged uniforms
 	glUniform3fv(vec3_Color, 1, square_color);
-	glUniform3fv(vec3_AmbientLightColor, 1, ambient_light_color);
+	glUniform3fv(vec3_AmbientColor, 1, ambient_color);
 	glUniform3fv(vec3_LightPos, 1, light_pos);
 	glUniform3fv(vec3_LightColor, 1, light_color);
+	glUniform1f(float_AmbientStrength, 0.2f);
+	glUniform1f(float_LightStrength, 0.1f);
+	glUniform1f(float_SpecularStrength, 0.5f);
+	glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 
 	//main loop
 	while (!glfwWindowShouldClose(window)) {
@@ -396,9 +404,13 @@ int main() {
 		process_keys(&camera, deltatime);
 		// load stuff into the buffer (buffer data then uniform)
 		glUniform3fv(vec3_Color, 1, square_color);
-		glUniform3fv(vec3_AmbientLightColor, 1, ambient_light_color);
+		glUniform3fv(vec3_AmbientColor, 1, ambient_color);
 		glUniform3fv(vec3_LightPos, 1, light_pos);
 		glUniform3fv(vec3_LightColor, 1, light_color);
+		glUniform1f(float_AmbientStrength, 0.2f);
+		glUniform1f(float_LightStrength, 0.1f);
+		glUniform1f(float_SpecularStrength, 0.5f);
+		glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
 		glUniformMatrix4fv(mat4_projection, 1, GL_FALSE, glm::value_ptr(projection));
