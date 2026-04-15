@@ -21,9 +21,13 @@ void main()
 	float diff = max(dot(normal, lightDirection), 0.f);
 	vec3 diffuse = diff * LightColor;
 	vec3 viewDirection = normalize(viewPos - fragPosition);
-	vec3 reflectDirection = reflect(lightDirection, normal);
-	float spec = pow(max(dot(viewDirection, reflectDirection), 0.0), 32);
-	vec3 specular = SpecularStrength * spec * LightColor;
-	FragColor = vec4(ambient + diffuse + specular, 1.f) * texture(TEX, fragTexCoords);
+	vec3 phong = ambient + diffuse;
+	if (0.f < dot(normal, lightDirection)) {
+		vec3 reflectDirection = reflect(-lightDirection, normal);
+		float spec = pow(max(dot(viewDirection, reflectDirection), 0.0), 32);
+		vec3 specular = SpecularStrength * spec * LightColor;
+		phong += specular;
+	}
+	FragColor = vec4(phong, 1.f) * vec4(1.f, 0.f, 0.f, 1.f); //* texture(TEX, fragTexCoords);
 }
 

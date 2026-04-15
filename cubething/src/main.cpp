@@ -62,7 +62,7 @@ static float lasty = (float)height/2.f;
 // vec3 verts, vec2 texCoords, vec3 normal
 static float square_data[] = {
 	// close face
-	0.5f,	0.5f,	-0.5f,	1.f,	1.f,	0.f,	0.f,	-1.f,	// close top right
+	0.5f,	0.5f,	-0.5f,	0.f,	0.f,	0.f,	0.f,	-1.f,	// close top right
 	0.5f,	-0.5f,	-0.5f,	1.f,	0.f,	0.f,	0.f,	-1.f,	// close bottom right
 	-0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	0.f,	0.f,	-1.f,	// close bottom left
 	-0.5f,	0.5f,	-0.5f,	0.f,	1.f,	0.f,	0.f,	-1.f,	// close top left
@@ -124,7 +124,7 @@ static float ambient_color[] = {
 };
 
 static float light_pos[] = {
-	1.f,	1.f,	-2.f
+	0.25f,	0.25f,	-1.f
 };
 
 static float light_color[] = {
@@ -387,7 +387,7 @@ int main() {
 	glUniform3fv(vec3_LightColor, 1, light_color);
 	glUniform1f(float_AmbientStrength, 0.2f);
 	glUniform1f(float_LightStrength, 0.1f);
-	glUniform1f(float_SpecularStrength, 0.6f);
+	glUniform1f(float_SpecularStrength, 0.4f);
 	glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 
 	//main loop
@@ -409,7 +409,7 @@ int main() {
 		glUniform3fv(vec3_LightColor, 1, light_color);
 		glUniform1f(float_AmbientStrength, 0.2f);
 		glUniform1f(float_LightStrength, 0.1f);
-		glUniform1f(float_SpecularStrength, 0.6f);
+		glUniform1f(float_SpecularStrength, 0.4f);
 		glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
