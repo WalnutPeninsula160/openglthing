@@ -114,17 +114,13 @@ static unsigned int square_indices[] = {
 	21,	22,	23
 };
 
-static float square_color[] = {
-	1.f,	0.5f,	0.f
-};
-
 // r, g, b, strength
 static float ambient_color[] = {
-	0.5f,	0.f,	1.f
+	1.f,	1.f,	1.f
 };
 
 static float light_pos[] = {
-	0.25f,	0.25f,	-1.f
+	0.f,	0.5f,	-3.f
 };
 
 static float light_color[] = {
@@ -250,18 +246,24 @@ static void cursor_callback(GLFWwindow *window, double x, double y) {
 }
 
 
-int main() {
+int main(int argc, char **argv) {
 	const char vert_shader_path[] = "./shaders/shader.vert";
 	const char frag_shader_path[] = "./shaders/shader.frag";
 	const char tex_image_path[] = "./textures/Uzumaki-Junji-Ito.jpg";
 	unsigned char *tex_data;
 	char *vert_shader_source, *frag_shader_source;
-	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer, texture; // 
-	GLint vec3_vertPosition, vec3_Color, vec2_TexCoords, vec3_AmbientColor, vec3_LightPos, vec3_vertNormal, vec3_LightColor, float_AmbientStrength, float_LightStrength, float_SpecularStrength, vec3_CameraPosition, mat4_model, mat4_view, mat4_projection; // buffer objects for shaders
+	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer, texture;
+	// buffer objects for shaders
+	GLint vec3_vertPosition, vec2_TexCoords, vec3_AmbientColor, vec3_LightPos, vec3_vertNormal, vec3_LightColor, float_AmbientLightStrength;
+	GLint float_LightStrength, vec3_CameraPosition, mat4_model, mat4_view, mat4_projection;
 	int success;
 	char info[512];
 	int tex_width, tex_height, tex_nrChannels;
 	float oldtime, newtime, deltatime;
+	float shininess = 32.f;
+	if (argc > 1) {
+		shininess = std::stof(argv[1]);
+	}
 	glfwSetErrorCallback(err_callback);
 	if (!glfwInit()) {
 		std::cerr << "Could not initialize glfw\n";
@@ -331,11 +333,10 @@ int main() {
 	vec2_TexCoords = glGetAttribLocation(shader_program, "TexCoords");
 	vec3_vertNormal = glGetAttribLocation(shader_program, "vertNormal");
 	vec3_AmbientColor = glGetUniformLocation(shader_program, "AmbientColor");
-	float_AmbientStrength = glGetUniformLocation(shader_program, "AmbientStrength");
 	vec3_LightPos = glGetUniformLocation(shader_program, "LightPos");
 	vec3_LightColor = glGetUniformLocation(shader_program, "LightColor");
+	float_AmbientLightStrength = glGetUniformLocation(shader_program, "AmbientLightStrength");
 	float_LightStrength = glGetUniformLocation(shader_program, "LightStrength");
-	float_SpecularStrength = glGetUniformLocation(shader_program, "SpecularStrength");
 	vec3_CameraPosition = glGetUniformLocation(shader_program, "CameraPosition");
 	mat4_model = glGetUniformLocation(shader_program, "model");
 	mat4_view = glGetUniformLocation(shader_program, "view");
@@ -381,13 +382,11 @@ int main() {
 	glUniformMatrix4fv(mat4_projection, 1, GL_FALSE, glm::value_ptr(projection));
 
 	// unchanged uniforms
-	glUniform3fv(vec3_Color, 1, square_color);
 	glUniform3fv(vec3_AmbientColor, 1, ambient_color);
 	glUniform3fv(vec3_LightPos, 1, light_pos);
 	glUniform3fv(vec3_LightColor, 1, light_color);
-	glUniform1f(float_AmbientStrength, 0.2f);
-	glUniform1f(float_LightStrength, 0.1f);
-	glUniform1f(float_SpecularStrength, 0.4f);
+	glUniform1f(float_AmbientLightStrength, 0.1f);
+	glUniform1f(float_LightStrength, 0.5f);
 	glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 
 	//main loop
@@ -403,13 +402,11 @@ int main() {
 		// process input
 		process_keys(&camera, deltatime);
 		// load stuff into the buffer (buffer data then uniform)
-		glUniform3fv(vec3_Color, 1, square_color);
 		glUniform3fv(vec3_AmbientColor, 1, ambient_color);
 		glUniform3fv(vec3_LightPos, 1, light_pos);
 		glUniform3fv(vec3_LightColor, 1, light_color);
-		glUniform1f(float_AmbientStrength, 0.2f);
-		glUniform1f(float_LightStrength, 0.1f);
-		glUniform1f(float_SpecularStrength, 0.4f);
+		glUniform1f(float_AmbientLightStrength, 0.1f);
+		glUniform1f(float_LightStrength, 0.5f);
 		glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
