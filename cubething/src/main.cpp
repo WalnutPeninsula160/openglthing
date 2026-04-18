@@ -19,6 +19,32 @@
 #define CAMERA_MOVE_SPEED 0.1
 #define CAMERA_ROTATE_SPEED 0.1
 
+struct MATERIAL {
+	float ambient[3];
+	float diffuse[3];
+	float specular[3];
+	float shiny;
+};
+
+struct LIGHT {
+	float position[3];
+	float color[3];
+	float strength;
+};
+
+struct MATERIAL_BO {
+	GLint ambient;
+	GLint diffuse;
+	GLint specular;
+	GLint shiny;
+};
+
+struct LIGHT_BO {
+	GLint position;
+	GLint color;
+	GLint strength;
+};
+
 char *read_file(const char *path) { 
 	FILE *file = std::fopen(path, "rb");
 	char *result;
@@ -93,6 +119,13 @@ static float square_data[] = {
 	0.5f,	0.5f,	0.5f,	0.f,	1.f,	1.f,	0.f,	0.f,	// far top right
 };
 
+static float square_material[] {
+	.ambient = {1.f, 1.f, 1.f},
+	.diffuse = {1.f, 1.f, 1.f},
+	.specular = {1.f, 1.f, 1.f},
+	.shiny = 1024.f
+};
+
 static unsigned int square_indices[] = {
 	// close
 	0,	1,	3,
@@ -114,17 +147,10 @@ static unsigned int square_indices[] = {
 	21,	22,	23
 };
 
-// r, g, b, strength
-static float ambient_color[] = {
-	1.f,	1.f,	1.f
-};
-
-static float light_pos[] = {
-	0.f,	0.5f,	-3.f
-};
-
-static float light_color[] = {
-	1.f,	1.f,	1.f
+static float light_data[] = {
+	.position = {1.2f, 1.2f, 3.f},
+	.color = {1.f, 1.f, 1.f},
+	.strength = 1.f
 };
 
 // coordinate space matrices
@@ -256,6 +282,8 @@ int main(int argc, char **argv) {
 	// buffer objects for shaders
 	GLint vec3_vertPosition, vec2_TexCoords, vec3_AmbientColor, vec3_LightPos, vec3_vertNormal, vec3_LightColor, float_AmbientLightStrength;
 	GLint float_LightStrength, vec3_CameraPosition, mat4_model, mat4_view, mat4_projection;
+	MATERIAL_BO square_material;
+	LIGHT_BO light_properties;
 	int success;
 	char info[512];
 	int tex_width, tex_height, tex_nrChannels;
@@ -332,12 +360,17 @@ int main(int argc, char **argv) {
 	vec3_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
 	vec2_TexCoords = glGetAttribLocation(shader_program, "TexCoords");
 	vec3_vertNormal = glGetAttribLocation(shader_program, "vertNormal");
+	suqre_material.ambient = glGetAttribLocation(shader_program, "material.ambient");
+	square_material.diffuse = glGetAttribLocation(shader_program, "material.diffuse");
+	square_material.specular = glGetAttribLocation(shader_program, "material.specular");
+	square_material.shiny = glGetAttribLocation(shader_program, "material.shiny");
+	light_pro
 	vec3_AmbientColor = glGetUniformLocation(shader_program, "AmbientColor");
-	vec3_LightPos = glGetUniformLocation(shader_program, "LightPos");
-	vec3_LightColor = glGetUniformLocation(shader_program, "LightColor");
+	vec3_LightPos = glGetUniformLocation(shader_program, "light.position");
+	vec3_LightColor = glGetUniformLocation(shader_program, "light.color");
+	float_LightStrength = glGetUniformLocation(shader_program, "light.strength");
 	float_AmbientLightStrength = glGetUniformLocation(shader_program, "AmbientLightStrength");
-	float_LightStrength = glGetUniformLocation(shader_program, "LightStrength");
-	vec3_CameraPosition = glGetUniformLocation(shader_program, "CameraPosition");
+	vec3_CameraPosition = glGetUniformLocation(shader_program, "viewPos");
 	mat4_model = glGetUniformLocation(shader_program, "model");
 	mat4_view = glGetUniformLocation(shader_program, "view");
 	mat4_projection = glGetUniformLocation(shader_program, "projection");
@@ -374,7 +407,7 @@ int main(int argc, char **argv) {
 	stbi_image_free(tex_data);
 
 	// set up camera
-	new_camera(&camera, {0, 0, -3}, {0, 0, 0});
+	new_camera(&camera, {-1.f, -0.5f, 3.f}, {0, 0, 0});
 
 	// coordinate system matrices
 	glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
