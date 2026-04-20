@@ -1,6 +1,6 @@
 #version 330 core
 
-struct Matreial {
+struct Material {
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
@@ -9,8 +9,9 @@ struct Matreial {
 
 struct Light {
 	vec3 position;
-	vec3 color;
-	float strength;
+	vec3 ambient;
+	vec3 diffuse;
+	vec3 specular;
 };
 
 in vec2 fragTexCoords;
@@ -25,20 +26,20 @@ uniform sampler2D TEX;
 out vec4 FragColor;
 void main()
 {
-	vec3 ambient = vec3(0.f);
-	vec3 diffuse = vec3(0.f);
-	vec3 specular = vec3(0.f);
+	vec3 ambient = light.ambient;
+	vec3 diffuse = light.diffuse;
+	vec3 specular = light.specular;
 	vec3 Normal = normalize(fragNormal);
-	vec3 lightDirection = normalize(LightPos - FragPos);
+	vec3 lightDirection = normalize(light.position - FragPos);
 	float diff = max(dot(Normal, lightDirection), 0.f);
 	vec3 viewDirection = normalize(viewPos - FragPos);
 	if (dot(Normal, lightDirection) > 0.f) {
 		vec3 reflectDirection = reflect(-lightDirection, Normal);
-		float spec = pow(max(dot(viewDirection, reflectDirection), 0.0), 32);
+		float spec = pow(max(dot(viewDirection, reflectDirection), 0.0), material.shiny);
+		specular *= spec * material.specular;
 	}
-	ambient = light.color * material.ambient;
-	diffuse = diff * light.strength * material.diffuse;
-	specular = light.strength * spec * material.specular;
+	ambient *= material.ambient;
+	diffuse *= diff * material.diffuse;
 	vec3 phong = ambient + diffuse + specular;
 	FragColor = vec4(phong, 1.f) * texture(TEX, fragTexCoords);
 }

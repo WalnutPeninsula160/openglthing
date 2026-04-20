@@ -28,8 +28,9 @@ struct MATERIAL {
 
 struct LIGHT {
 	float position[3];
-	float color[3];
-	float strength;
+	float ambient[3];
+	float diffuse[3];
+	float specular[3];
 };
 
 struct MATERIAL_BO {
@@ -41,8 +42,9 @@ struct MATERIAL_BO {
 
 struct LIGHT_BO {
 	GLint position;
-	GLint color;
-	GLint strength;
+	GLint ambient;
+	GLint diffuse;
+	GLint specular;
 };
 
 char *read_file(const char *path) { 
@@ -119,11 +121,11 @@ static float square_data[] = {
 	0.5f,	0.5f,	0.5f,	0.f,	1.f,	1.f,	0.f,	0.f,	// far top right
 };
 
-static float square_material[] {
-	.ambient = {1.f, 1.f, 1.f},
-	.diffuse = {1.f, 1.f, 1.f},
-	.specular = {1.f, 1.f, 1.f},
-	.shiny = 1024.f
+static struct MATERIAL square_material_data {
+	{1.f, 1.f, 1.f},
+	{1.f, 1.f, 1.f},
+	{1.f, 1.f, 1.f},
+	32.f
 };
 
 static unsigned int square_indices[] = {
@@ -147,10 +149,11 @@ static unsigned int square_indices[] = {
 	21,	22,	23
 };
 
-static float light_data[] = {
-	.position = {1.2f, 1.2f, 3.f},
-	.color = {1.f, 1.f, 1.f},
-	.strength = 1.f
+static struct LIGHT light_data = {
+	{1.2f, 1.2f, 3.f},
+	{0.1f, 0.1f, 0.1f},
+	{0.5f, 0.5f, 0.5f},
+	{0.6f, 0.6f, 0.6f}
 };
 
 // coordinate space matrices
@@ -280,18 +283,14 @@ int main(int argc, char **argv) {
 	char *vert_shader_source, *frag_shader_source;
 	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer, texture;
 	// buffer objects for shaders
-	GLint vec3_vertPosition, vec2_TexCoords, vec3_AmbientColor, vec3_LightPos, vec3_vertNormal, vec3_LightColor, float_AmbientLightStrength;
-	GLint float_LightStrength, vec3_CameraPosition, mat4_model, mat4_view, mat4_projection;
-	MATERIAL_BO square_material;
-	LIGHT_BO light_properties;
+	GLint vec3_vertPosition, vec2_TexCoords, vec3_vertNormal;
+	GLint vec3_CameraPosition, mat4_model, mat4_view, mat4_projection;
+	struct MATERIAL_BO square_material;
+	struct LIGHT_BO light_properties;
 	int success;
 	char info[512];
 	int tex_width, tex_height, tex_nrChannels;
 	float oldtime, newtime, deltatime;
-	float shininess = 32.f;
-	if (argc > 1) {
-		shininess = std::stof(argv[1]);
-	}
 	glfwSetErrorCallback(err_callback);
 	if (!glfwInit()) {
 		std::cerr << "Could not initialize glfw\n";
@@ -360,16 +359,14 @@ int main(int argc, char **argv) {
 	vec3_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
 	vec2_TexCoords = glGetAttribLocation(shader_program, "TexCoords");
 	vec3_vertNormal = glGetAttribLocation(shader_program, "vertNormal");
-	suqre_material.ambient = glGetAttribLocation(shader_program, "material.ambient");
-	square_material.diffuse = glGetAttribLocation(shader_program, "material.diffuse");
-	square_material.specular = glGetAttribLocation(shader_program, "material.specular");
-	square_material.shiny = glGetAttribLocation(shader_program, "material.shiny");
-	light_pro
-	vec3_AmbientColor = glGetUniformLocation(shader_program, "AmbientColor");
-	vec3_LightPos = glGetUniformLocation(shader_program, "light.position");
-	vec3_LightColor = glGetUniformLocation(shader_program, "light.color");
-	float_LightStrength = glGetUniformLocation(shader_program, "light.strength");
-	float_AmbientLightStrength = glGetUniformLocation(shader_program, "AmbientLightStrength");
+	square_material.ambient = glGetUniformLocation(shader_program, "material.ambient");
+	square_material.diffuse = glGetUniformLocation(shader_program, "material.diffuse");
+	square_material.specular = glGetUniformLocation(shader_program, "material.specular");
+	square_material.shiny = glGetUniformLocation(shader_program, "material.shiny");
+	light_properties.position = glGetUniformLocation(shader_program, "light.position");
+	light_properties.ambient = glGetUniformLocation(shader_program, "light.ambient");
+	light_properties.diffuse = glGetUniformLocation(shader_program, "light.diffuse");
+	light_properties.specular = glGetUniformLocation(shader_program, "light.specular");
 	vec3_CameraPosition = glGetUniformLocation(shader_program, "viewPos");
 	mat4_model = glGetUniformLocation(shader_program, "model");
 	mat4_view = glGetUniformLocation(shader_program, "view");
@@ -415,11 +412,14 @@ int main(int argc, char **argv) {
 	glUniformMatrix4fv(mat4_projection, 1, GL_FALSE, glm::value_ptr(projection));
 
 	// unchanged uniforms
-	glUniform3fv(vec3_AmbientColor, 1, ambient_color);
-	glUniform3fv(vec3_LightPos, 1, light_pos);
-	glUniform3fv(vec3_LightColor, 1, light_color);
-	glUniform1f(float_AmbientLightStrength, 0.1f);
-	glUniform1f(float_LightStrength, 0.5f);
+	glUniform3fv(square_material.ambient, 1, square_material_data.ambient);
+	glUniform3fv(square_material.diffuse, 1, square_material_data.diffuse);
+	glUniform3fv(square_material.specular, 1, square_material_data.specular);
+	glUniform1f(square_material.shiny, square_material_data.shiny);
+	glUniform3fv(light_properties.position, 1, light_data.position);
+	glUniform3fv(light_properties.ambient, 1, light_data.ambient);
+	glUniform3fv(light_properties.diffuse, 1, light_data.diffuse);
+	glUniform3fv(light_properties.specular, 1, light_data.specular);
 	glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 
 	//main loop
@@ -435,11 +435,14 @@ int main(int argc, char **argv) {
 		// process input
 		process_keys(&camera, deltatime);
 		// load stuff into the buffer (buffer data then uniform)
-		glUniform3fv(vec3_AmbientColor, 1, ambient_color);
-		glUniform3fv(vec3_LightPos, 1, light_pos);
-		glUniform3fv(vec3_LightColor, 1, light_color);
-		glUniform1f(float_AmbientLightStrength, 0.1f);
-		glUniform1f(float_LightStrength, 0.5f);
+		glUniform3fv(square_material.ambient, 1, square_material_data.ambient);
+		glUniform3fv(square_material.diffuse, 1, square_material_data.diffuse);
+		glUniform3fv(square_material.specular, 1, square_material_data.specular);
+		glUniform1f(square_material.shiny, square_material_data.shiny);
+		glUniform3fv(light_properties.position, 1, light_data.position);
+		glUniform3fv(light_properties.ambient, 1, light_data.ambient);
+		glUniform3fv(light_properties.diffuse, 1, light_data.diffuse);
+		glUniform3fv(light_properties.specular, 1, light_data.specular);
 		glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
