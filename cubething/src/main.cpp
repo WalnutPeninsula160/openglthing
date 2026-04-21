@@ -31,6 +31,9 @@ struct LIGHT {
 	float ambient[3];
 	float diffuse[3];
 	float specular[3];
+	float constant;
+	float linear;
+	float quadratic;
 };
 
 struct MATERIAL_BO {
@@ -45,6 +48,9 @@ struct LIGHT_BO {
 	GLint ambient;
 	GLint diffuse;
 	GLint specular;
+	GLint constant;
+	GLint linear;
+	GLint quadratic;
 };
 
 char *read_file(const char *path) { 
@@ -153,7 +159,10 @@ static struct LIGHT light_data = {
 	{1.2f, 1.2f, 3.f},
 	{0.1f, 0.1f, 0.1f},
 	{0.5f, 0.5f, 0.5f},
-	{0.6f, 0.6f, 0.6f}
+	{0.6f, 0.6f, 0.6f},
+	0.2f,
+	0.3f,
+	0.4f
 };
 
 // coordinate space matrices
@@ -367,6 +376,9 @@ int main(int argc, char **argv) {
 	light_properties.ambient = glGetUniformLocation(shader_program, "light.ambient");
 	light_properties.diffuse = glGetUniformLocation(shader_program, "light.diffuse");
 	light_properties.specular = glGetUniformLocation(shader_program, "light.specular");
+	light_properties.constant = glGetUniformLocation(shader_program, "light.constant");
+	light_properties.linear = glGetUniformLocation(shader_program, "light.linear");
+	light_properties.quadratic = glGetUniformLocation(shader_program, "light.quadratic");
 	vec3_CameraPosition = glGetUniformLocation(shader_program, "viewPos");
 	mat4_model = glGetUniformLocation(shader_program, "model");
 	mat4_view = glGetUniformLocation(shader_program, "view");
@@ -420,6 +432,9 @@ int main(int argc, char **argv) {
 	glUniform3fv(light_properties.ambient, 1, light_data.ambient);
 	glUniform3fv(light_properties.diffuse, 1, light_data.diffuse);
 	glUniform3fv(light_properties.specular, 1, light_data.specular);
+	glUniform1f(light_properties.constant, light_data.constant);
+	glUniform1f(light_properties.linear, light_data.linear);
+	glUniform1f(light_properties.quadratic, light_data.quadratic);
 	glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 
 	//main loop
@@ -443,6 +458,9 @@ int main(int argc, char **argv) {
 		glUniform3fv(light_properties.ambient, 1, light_data.ambient);
 		glUniform3fv(light_properties.diffuse, 1, light_data.diffuse);
 		glUniform3fv(light_properties.specular, 1, light_data.specular);
+		glUniform1f(light_properties.constant, light_data.constant);
+		glUniform1f(light_properties.linear, light_data.linear);
+		glUniform1f(light_properties.quadratic, light_data.quadratic);
 		glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
