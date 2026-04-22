@@ -96,7 +96,7 @@ static float lasty = (float)height/2.f;
 // vec3 verts, vec2 texCoords, vec3 normal
 static float square_data[] = {
 	// close face
-	0.5f,	0.5f,	-0.5f,	0.f,	0.f,	0.f,	0.f,	-1.f,	// close top right
+	0.5f,	0.5f,	-0.5f,	1.f,	1.f,	0.f,	0.f,	-1.f,	// close top right
 	0.5f,	-0.5f,	-0.5f,	1.f,	0.f,	0.f,	0.f,	-1.f,	// close bottom right
 	-0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	0.f,	0.f,	-1.f,	// close bottom left
 	-0.5f,	0.5f,	-0.5f,	0.f,	1.f,	0.f,	0.f,	-1.f,	// close top left
@@ -156,7 +156,7 @@ static unsigned int square_indices[] = {
 };
 
 static struct LIGHT light_data = {
-	{1.2f, 1.2f, 3.f},
+	{0.7f, 0.7f, 1.f},
 	{0.1f, 0.1f, 0.1f},
 	{0.5f, 0.5f, 0.5f},
 	{0.6f, 0.6f, 0.6f},
