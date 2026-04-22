@@ -356,6 +356,8 @@ int main(int argc, char **argv) {
 	}
 
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glEnable(GL_CULL_FACE);
 
 	// create shader program
 	shader_program = glCreateProgram();
