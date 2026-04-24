@@ -96,35 +96,56 @@ static float lasty = (float)height/2.f;
 // vec3 verts, vec2 texCoords, vec3 normal
 static float square_data[] = {
 	// close face
-	0.5f,	0.5f,	-0.5f,	1.f,	1.f,	0.f,	0.f,	-1.f,	// close top right
-	0.5f,	-0.5f,	-0.5f,	1.f,	0.f,	0.f,	0.f,	-1.f,	// close bottom right
-	-0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	0.f,	0.f,	-1.f,	// close bottom left
-	-0.5f,	0.5f,	-0.5f,	0.f,	1.f,	0.f,	0.f,	-1.f,	// close top left
+	0.5f,	0.5f,	0.5f,	0.f,	0.f,	0.f,	0.f,	1.f,	// top right
+	0.5f,	-0.5f,	0.5f,	0.f,	1.f,	0.f,	0.f,	1.f,	// bottom right
+	-0.5f,	-0.5f,	0.5f,	1.f,	1.f,	0.f,	0.f,	1.f,	// bottom left
+	-0.5f,	0.5f,	0.5f,	1.f,	0.f,	0.f,	0.f,	1.f,	// top left
 	// far face
-	-0.5f,	-0.5f,	0.5f,	1.f,	1.f,	0.f,	0.f,	1.f,	// far bottom left
-	-0.5f,	0.5f,	0.5f,	1.f,	0.f,	0.f,	0.f,	1.f,	// far top left
-	0.5f,	0.5f,	0.5f,	0.f,	0.f,	0.f,	0.f,	1.f,	// far top right
-	0.5f,	-0.5f,	0.5f,	0.f,	1.f,	0.f,	0.f,	1.f,	// far bottom right
+	0.5f,	0.5f,	-0.5f,	1.f,	1.f,	0.f,	0.f,	-1.f,	// top right
+	0.5f,	-0.5f,	-0.5f,	1.f,	0.f,	0.f,	0.f,	-1.f,	// bottom right
+	-0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	0.f,	0.f,	-1.f,	// bottom left
+	-0.5f,	0.5f,	-0.5f,	0.f,	1.f,	0.f,	0.f,	-1.f,	// top left
 	// top face
-	0.5f,	0.5f,	0.5f,	1.f,	1.f,	0.f,	1.f,	0.f,	// far top right
-	0.5f,	0.5f,	-0.5f,	1.f,	0.f,	0.f,	1.f,	0.f,	// close top right
-	-0.5f,	0.5f,	-0.5f,	0.f,	0.f,	0.f,	1.f,	0.f,	// close top left
-	-0.5f,	0.5f,	0.5f,	0.f,	1.f,	0.f,	1.f,	0.f,	// far top left
+	0.5f,	0.5f,	-0.5f,	1.f,	0.f,	0.f,	1.f,	0.f,	// top right
+	0.5f,	0.5f,	0.5f,	1.f,	1.f,	0.f,	1.f,	0.f,	// bottom right
+	-0.5f,	0.5f,	0.5f,	0.f,	1.f,	0.f,	1.f,	0.f,	// bottom left
+	-0.5f,	0.5f,	-0.5f,	0.f,	0.f,	0.f,	1.f,	0.f,	// top left
 	// bottom face
-	0.5f,	-0.5f,	-0.5f,	1.f,	1.f,	0.f,	-1.f,	0.f,	// close bottom right
-	0.5f,	-0.5f,	0.5f,	1.f,	0.f,	0.f,	-1.f,	0.f,	// far bottom right
-	-0.5f,	-0.5f,	0.5f,	0.f,	0.f,	0.f,	-1.f,	0.f,	// far bottom left
-	-0.5f,	-0.5f,	-0.5f,	0.f,	1.f,	0.f,	-1.f,	0.f,	// close bottom left
+	0.5f,	-0.5f,	0.5f,	1.f,	0.f,	0.f,	-1.f,	0.f,	// top right
+	0.5f,	-0.5f,	-0.5f,	1.f,	1.f,	0.f,	-1.f,	0.f,	// bottom right
+	-0.5f,	-0.5f,	-0.5f,	0.f,	1.f,	0.f,	-1.f,	0.f,	// bottom left
+	-0.5f,	-0.5f,	0.5f,	0.f,	0.f,	0.f,	-1.f,	0.f,	// bottom left
 	// left face
-	-0.5f,	0.5f,	0.5f,	1.f,	1.f,	-1.f,	0.f,	0.f,	// far top left
-	-0.5f,	0.5f,	-0.5f,	1.f,	0.f,	-1.f,	0.f,	0.f,	// close top left
-	-0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	-1.f,	0.f,	0.f,	// close bottom left
-	-0.5f,	-0.5f,	0.5f,	0.f,	1.f,	-1.f,	0.f,	0.f,	// far bottom left
+	-0.5f,	0.5f,	0.5f,	1.f,	1.f,	-1.f,	0.f,	0.f,	// top left
+	-0.5f,	-0.5f,	0.5f,	0.f,	1.f,	-1.f,	0.f,	0.f,	// bottom left
+	-0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	-1.f,	0.f,	0.f,	// bottom left
+	-0.5f,	0.5f,	-0.5f,	1.f,	0.f,	-1.f,	0.f,	0.f,	// top left
 	// right face
-	0.5f,	-0.5f,	0.5f,	1.f,	1.f,	1.f,	0.f,	0.f,	// far bottom right
-	0.5f,	-0.5f,	-0.5f,	1.f,	0.f,	1.f,	0.f,	0.f,	// close bottom right
-	0.5f,	0.5f,	-0.5f,	0.f,	0.f,	1.f,	0.f,	0.f,	// close top right
-	0.5f,	0.5f,	0.5f,	0.f,	1.f,	1.f,	0.f,	0.f,	// far top right
+	0.5f,	0.5f,	-0.5f,	0.f,	0.f,	1.f,	0.f,	0.f,	// top right
+	0.5f,	-0.5f,	-0.5f,	1.f,	0.f,	1.f,	0.f,	0.f,	// bottom right
+	0.5f,	-0.5f,	0.5f,	1.f,	1.f,	1.f,	0.f,	0.f,	// bottom right
+	0.5f,	0.5f,	0.5f,	0.f,	1.f,	1.f,	0.f,	0.f,	// top right
+};
+
+static unsigned int square_indices[] = {
+	// close
+	0,	1,	2,
+	0,	2,	3,
+	// far
+	4,	5,	6,
+	4,	6,	7,
+	// top
+	8,	9,	10,
+	8,	10,	11,
+	// bottom
+	12,	13,	14,
+	12,	14,	15,
+	// left
+	16,	17,	18,
+	16,	18,	19,
+	// right
+	20,	21,	22,
+	20,	22,	23
 };
 
 static struct MATERIAL square_material_data {
@@ -134,30 +155,9 @@ static struct MATERIAL square_material_data {
 	32.f
 };
 
-static unsigned int square_indices[] = {
-	// close
-	0,	1,	3,
-	1,	2,	3,
-	// far
-	4,	5,	7,
-	5,	6,	7,
-	// top
-	8,	9,	11,
-	9,	10,	11,
-	// bottom
-	12,	13,	15,
-	13,	14,	15,
-	// left
-	16,	17,	19,
-	17,	18,	19,
-	// right
-	20,	21,	23,
-	21,	22,	23
-};
-
 static struct LIGHT light_data = {
 	{0.7f, 0.7f, 1.f},
-	{0.1f, 0.1f, 0.1f},
+	{0.3f, 0.3f, 0.3f},
 	{0.5f, 0.5f, 0.5f},
 	{0.6f, 0.6f, 0.6f},
 	0.2f,
@@ -358,6 +358,8 @@ int main(int argc, char **argv) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CW);
 
 	// create shader program
 	shader_program = glCreateProgram();
