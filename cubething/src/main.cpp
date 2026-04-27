@@ -169,6 +169,7 @@ static struct LIGHT light_data = {
 glm::mat4 model = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f));
 //glm::mat4 view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, -3.f));
 glm::mat4 projection = glm::perspective(glm::radians(45.f), (float)width/(float)height, 0.1f, 100.f);
+glm::mat3 Normalize = glm::mat3(glm::transpose(glm::inverse(model)));
 
 enum keybindCodes {
 	W = 0,
@@ -293,7 +294,7 @@ int main(int argc, char **argv) {
 	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer, texture;
 	// buffer objects for shaders
 	GLint vec3_vertPosition, vec2_TexCoords, vec3_vertNormal;
-	GLint vec3_CameraPosition, mat4_model, mat4_view, mat4_projection;
+	GLint vec3_CameraPosition, mat4_model, mat4_view, mat4_projection, mat3_Normalize;
 	struct MATERIAL_BO square_material;
 	struct LIGHT_BO light_properties;
 	int success;
@@ -387,6 +388,7 @@ int main(int argc, char **argv) {
 	mat4_model = glGetUniformLocation(shader_program, "model");
 	mat4_view = glGetUniformLocation(shader_program, "view");
 	mat4_projection = glGetUniformLocation(shader_program, "projection");
+	mat3_Normalize = glGetUniformLocation(shader_program, "Normalize");
 	glGenVertexArrays(1, &vertex_array);
 	glGenBuffers(1, &vertex_buffer);
 	glGenBuffers(1, &element_buffer);
@@ -426,6 +428,7 @@ int main(int argc, char **argv) {
 	glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 	glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
 	glUniformMatrix4fv(mat4_projection, 1, GL_FALSE, glm::value_ptr(projection));
+	glUniformMatrix3fv(mat3_Normalize, 1, GL_FALSE, glm::value_ptr(Normalize));
 
 	// unchanged uniforms
 	glUniform3fv(square_material.ambient, 1, square_material_data.ambient);
@@ -453,6 +456,8 @@ int main(int argc, char **argv) {
 		deltatime = newtime - oldtime;
 		// process input
 		process_keys(&camera, deltatime);
+		// compute normalize matrix (better to do it in cpu rather than gpu)
+		Normalize = glm::mat3(glm::transpose(glm::inverse(model)));
 		// load stuff into the buffer (buffer data then uniform)
 		glUniform3fv(square_material.ambient, 1, square_material_data.ambient);
 		glUniform3fv(square_material.diffuse, 1, square_material_data.diffuse);
@@ -469,6 +474,7 @@ int main(int argc, char **argv) {
 		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
 		glUniformMatrix4fv(mat4_projection, 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix3fv(mat3_Normalize, 1, GL_FALSE, glm::value_ptr(Normalize));
 		// draw things (glDrawElements uses the indices from the bound element buffer object, in this case element_buffer)
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		// second parameter - the number of indices specified, since opengl uses triangles, 2 triangles are needed to draw a square resulting in 6 vertices drawn

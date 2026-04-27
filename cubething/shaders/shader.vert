@@ -7,6 +7,7 @@ uniform vec3 Color;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat3 Normalize;
 
 out vec2 fragTexCoords;
 out vec3 FragPos;
@@ -17,5 +18,5 @@ void main()
 	gl_Position = projection * view * model * vec4(vertPosition, 1.f);
 	fragTexCoords = TexCoords;
 	FragPos = vec3(model * vec4(vertPosition, 1.f));
-	fragNormal = mat3(transpose(inverse(model))) * vertNormal;
+	fragNormal = Normalize * vertNormal;
 }
