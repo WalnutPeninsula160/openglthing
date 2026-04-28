@@ -1,0 +1,8 @@
+#pragma once
+
+template <size_t vertex_data_size, size_t num_of_tris>
+struct Object {
+	float vertex_data[vertex_data_size];
+	float incidies[num_of_tris * 3];
+	MATERIAL material;
+}

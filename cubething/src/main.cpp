@@ -14,44 +14,11 @@
 #include "glm/gtc/type_ptr.hpp"
 // other things
 #include "camera.hpp"
+#include "objects.hpp"
 
 // macro definitions
 #define CAMERA_MOVE_SPEED 0.1
 #define CAMERA_ROTATE_SPEED 0.1
-
-struct MATERIAL {
-	float ambient[3];
-	float diffuse[3];
-	float specular[3];
-	float shiny;
-};
-
-struct LIGHT {
-	float position[3];
-	float ambient[3];
-	float diffuse[3];
-	float specular[3];
-	float constant;
-	float linear;
-	float quadratic;
-};
-
-struct MATERIAL_BO {
-	GLint ambient;
-	GLint diffuse;
-	GLint specular;
-	GLint shiny;
-};
-
-struct LIGHT_BO {
-	GLint position;
-	GLint ambient;
-	GLint diffuse;
-	GLint specular;
-	GLint constant;
-	GLint linear;
-	GLint quadratic;
-};
 
 char *read_file(const char *path) { 
 	FILE *file = std::fopen(path, "rb");
@@ -93,76 +60,78 @@ CAMERA camera;
 static float lastx = (float)width/2.f;
 static float lasty = (float)height/2.f;
 
-// vec3 verts, vec2 texCoords, vec3 normal
-static float square_data[] = {
-	// close face
-	0.5f,	0.5f,	0.5f,	0.f,	0.f,	0.f,	0.f,	1.f,	// top right
-	0.5f,	-0.5f,	0.5f,	0.f,	1.f,	0.f,	0.f,	1.f,	// bottom right
-	-0.5f,	-0.5f,	0.5f,	1.f,	1.f,	0.f,	0.f,	1.f,	// bottom left
-	-0.5f,	0.5f,	0.5f,	1.f,	0.f,	0.f,	0.f,	1.f,	// top left
-	// far face
-	0.5f,	0.5f,	-0.5f,	1.f,	1.f,	0.f,	0.f,	-1.f,	// top right
-	0.5f,	-0.5f,	-0.5f,	1.f,	0.f,	0.f,	0.f,	-1.f,	// bottom right
-	-0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	0.f,	0.f,	-1.f,	// bottom left
-	-0.5f,	0.5f,	-0.5f,	0.f,	1.f,	0.f,	0.f,	-1.f,	// top left
-	// top face
-	0.5f,	0.5f,	-0.5f,	1.f,	0.f,	0.f,	1.f,	0.f,	// top right
-	0.5f,	0.5f,	0.5f,	1.f,	1.f,	0.f,	1.f,	0.f,	// bottom right
-	-0.5f,	0.5f,	0.5f,	0.f,	1.f,	0.f,	1.f,	0.f,	// bottom left
-	-0.5f,	0.5f,	-0.5f,	0.f,	0.f,	0.f,	1.f,	0.f,	// top left
-	// bottom face
-	0.5f,	-0.5f,	0.5f,	1.f,	0.f,	0.f,	-1.f,	0.f,	// top right
-	0.5f,	-0.5f,	-0.5f,	1.f,	1.f,	0.f,	-1.f,	0.f,	// bottom right
-	-0.5f,	-0.5f,	-0.5f,	0.f,	1.f,	0.f,	-1.f,	0.f,	// bottom left
-	-0.5f,	-0.5f,	0.5f,	0.f,	0.f,	0.f,	-1.f,	0.f,	// bottom left
-	// left face
-	-0.5f,	0.5f,	0.5f,	1.f,	1.f,	-1.f,	0.f,	0.f,	// top left
-	-0.5f,	-0.5f,	0.5f,	0.f,	1.f,	-1.f,	0.f,	0.f,	// bottom left
-	-0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	-1.f,	0.f,	0.f,	// bottom left
-	-0.5f,	0.5f,	-0.5f,	1.f,	0.f,	-1.f,	0.f,	0.f,	// top left
-	// right face
-	0.5f,	0.5f,	-0.5f,	0.f,	0.f,	1.f,	0.f,	0.f,	// top right
-	0.5f,	-0.5f,	-0.5f,	1.f,	0.f,	1.f,	0.f,	0.f,	// bottom right
-	0.5f,	-0.5f,	0.5f,	1.f,	1.f,	1.f,	0.f,	0.f,	// bottom right
-	0.5f,	0.5f,	0.5f,	0.f,	1.f,	1.f,	0.f,	0.f,	// top right
+static struct Object<8 * 24, 12> cube {
+	// vec3 verts, vec2 texCoords, vec3 normal
+	{
+		// close face
+		0.5f,	0.5f,	0.5f,	0.f,	0.f,	0.f,	0.f,	1.f,	// top right
+		0.5f,	-0.5f,	0.5f,	0.f,	1.f,	0.f,	0.f,	1.f,	// bottom right
+		-0.5f,	-0.5f,	0.5f,	1.f,	1.f,	0.f,	0.f,	1.f,	// bottom left
+		-0.5f,	0.5f,	0.5f,	1.f,	0.f,	0.f,	0.f,	1.f,	// top left
+		// far face
+		0.5f,	0.5f,	-0.5f,	1.f,	1.f,	0.f,	0.f,	-1.f,	// top right
+		0.5f,	-0.5f,	-0.5f,	1.f,	0.f,	0.f,	0.f,	-1.f,	// bottom right
+		-0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	0.f,	0.f,	-1.f,	// bottom left
+		-0.5f,	0.5f,	-0.5f,	0.f,	1.f,	0.f,	0.f,	-1.f,	// top left
+		// top face
+		0.5f,	0.5f,	-0.5f,	1.f,	0.f,	0.f,	1.f,	0.f,	// top right
+		0.5f,	0.5f,	0.5f,	1.f,	1.f,	0.f,	1.f,	0.f,	// bottom right
+		-0.5f,	0.5f,	0.5f,	0.f,	1.f,	0.f,	1.f,	0.f,	// bottom left
+		-0.5f,	0.5f,	-0.5f,	0.f,	0.f,	0.f,	1.f,	0.f,	// top left
+		// bottom face
+		0.5f,	-0.5f,	0.5f,	1.f,	0.f,	0.f,	-1.f,	0.f,	// top right
+		0.5f,	-0.5f,	-0.5f,	1.f,	1.f,	0.f,	-1.f,	0.f,	// bottom right
+		-0.5f,	-0.5f,	-0.5f,	0.f,	1.f,	0.f,	-1.f,	0.f,	// bottom left
+		-0.5f,	-0.5f,	0.5f,	0.f,	0.f,	0.f,	-1.f,	0.f,	// bottom left
+		// left face
+		-0.5f,	0.5f,	0.5f,	1.f,	1.f,	-1.f,	0.f,	0.f,	// top left
+		-0.5f,	-0.5f,	0.5f,	0.f,	1.f,	-1.f,	0.f,	0.f,	// bottom left
+		-0.5f,	-0.5f,	-0.5f,	0.f,	0.f,	-1.f,	0.f,	0.f,	// bottom left
+		-0.5f,	0.5f,	-0.5f,	1.f,	0.f,	-1.f,	0.f,	0.f,	// top left
+		// right face
+		0.5f,	0.5f,	-0.5f,	0.f,	0.f,	1.f,	0.f,	0.f,	// top right
+		0.5f,	-0.5f,	-0.5f,	1.f,	0.f,	1.f,	0.f,	0.f,	// bottom right
+		0.5f,	-0.5f,	0.5f,	1.f,	1.f,	1.f,	0.f,	0.f,	// bottom right
+		0.5f,	0.5f,	0.5f,	0.f,	1.f,	1.f,	0.f,	0.f,	// top right
+	},
+	{
+		// close
+		0,	1,	2,
+		0,	2,	3,
+		// far
+		4,	5,	6,
+		4,	6,	7,
+		// top
+		8,	9,	10,
+		8,	10,	11,
+		// bottom
+		12,	13,	14,
+		12,	14,	15,
+		// left
+		16,	17,	18,
+		16,	18,	19,
+		// right
+		20,	21,	22,
+		20,	22,	23
+	},
+	{
+		{1.f, 	1.f,	1.f},
+		{1.f,	1.f,	1.f},
+		{1.f,	1.f,	1.f},
+		32.f,
+		{0,	0,	0,	0}
+	}
 };
 
-static unsigned int square_indices[] = {
-	// close
-	0,	1,	2,
-	0,	2,	3,
-	// far
-	4,	5,	6,
-	4,	6,	7,
-	// top
-	8,	9,	10,
-	8,	10,	11,
-	// bottom
-	12,	13,	14,
-	12,	14,	15,
-	// left
-	16,	17,	18,
-	16,	18,	19,
-	// right
-	20,	21,	22,
-	20,	22,	23
-};
-
-static struct MATERIAL square_material_data {
-	{1.f, 1.f, 1.f},
-	{1.f, 1.f, 1.f},
-	{1.f, 1.f, 1.f},
-	32.f
-};
-
-static struct LIGHT light_data = {
+static struct LIGHT light = {
 	{0.7f, 0.7f, 1.f},
 	{0.3f, 0.3f, 0.3f},
 	{0.5f, 0.5f, 0.5f},
 	{0.6f, 0.6f, 0.6f},
 	0.2f,
 	0.3f,
-	0.4f
+	0.4f,
+	{0,	0,	0,	0,	0,	0,	0}
 };
 
 // coordinate space matrices
@@ -295,8 +264,6 @@ int main(int argc, char **argv) {
 	// buffer objects for shaders
 	GLint vec3_vertPosition, vec2_TexCoords, vec3_vertNormal;
 	GLint vec3_CameraPosition, mat4_model, mat4_view, mat4_projection, mat3_Normalize;
-	struct MATERIAL_BO square_material;
-	struct LIGHT_BO light_properties;
 	int success;
 	char info[512];
 	int tex_width, tex_height, tex_nrChannels;
@@ -373,17 +340,17 @@ int main(int argc, char **argv) {
 	vec3_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
 	vec2_TexCoords = glGetAttribLocation(shader_program, "TexCoords");
 	vec3_vertNormal = glGetAttribLocation(shader_program, "vertNormal");
-	square_material.ambient = glGetUniformLocation(shader_program, "material.ambient");
-	square_material.diffuse = glGetUniformLocation(shader_program, "material.diffuse");
-	square_material.specular = glGetUniformLocation(shader_program, "material.specular");
-	square_material.shiny = glGetUniformLocation(shader_program, "material.shiny");
-	light_properties.position = glGetUniformLocation(shader_program, "light.position");
-	light_properties.ambient = glGetUniformLocation(shader_program, "light.ambient");
-	light_properties.diffuse = glGetUniformLocation(shader_program, "light.diffuse");
-	light_properties.specular = glGetUniformLocation(shader_program, "light.specular");
-	light_properties.constant = glGetUniformLocation(shader_program, "light.constant");
-	light_properties.linear = glGetUniformLocation(shader_program, "light.linear");
-	light_properties.quadratic = glGetUniformLocation(shader_program, "light.quadratic");
+	cube.material.buffers.ambient = glGetUniformLocation(shader_program, "material.ambient");
+	cube.material.buffers.diffuse = glGetUniformLocation(shader_program, "material.diffuse");
+	cube.material.buffers.specular = glGetUniformLocation(shader_program, "material.specular");
+	cube.material.buffers.shiny = glGetUniformLocation(shader_program, "material.shiny");
+	light.buffers.position = glGetUniformLocation(shader_program, "light.position");
+	light.buffers.ambient = glGetUniformLocation(shader_program, "light.ambient");
+	light.buffers.diffuse = glGetUniformLocation(shader_program, "light.diffuse");
+	light.buffers.specular = glGetUniformLocation(shader_program, "light.specular");
+	light.buffers.constant = glGetUniformLocation(shader_program, "light.constant");
+	light.buffers.linear = glGetUniformLocation(shader_program, "light.linear");
+	light.buffers.quadratic = glGetUniformLocation(shader_program, "light.quadratic");
 	vec3_CameraPosition = glGetUniformLocation(shader_program, "viewPos");
 	mat4_model = glGetUniformLocation(shader_program, "model");
 	mat4_view = glGetUniformLocation(shader_program, "view");
@@ -394,9 +361,9 @@ int main(int argc, char **argv) {
 	glGenBuffers(1, &element_buffer);
 	glBindVertexArray(vertex_array);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(square_data), square_data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, cube.vertex_data_size, cube.vertex_data, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(square_indices), square_indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, cube.indices_size, cube.indices, GL_STATIC_DRAW);
 	glVertexAttribPointer(vec3_vertPosition, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glVertexAttribPointer(vec2_TexCoords, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glVertexAttribPointer(vec3_vertNormal, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
@@ -431,17 +398,17 @@ int main(int argc, char **argv) {
 	glUniformMatrix3fv(mat3_Normalize, 1, GL_FALSE, glm::value_ptr(Normalize));
 
 	// unchanged uniforms
-	glUniform3fv(square_material.ambient, 1, square_material_data.ambient);
-	glUniform3fv(square_material.diffuse, 1, square_material_data.diffuse);
-	glUniform3fv(square_material.specular, 1, square_material_data.specular);
-	glUniform1f(square_material.shiny, square_material_data.shiny);
-	glUniform3fv(light_properties.position, 1, light_data.position);
-	glUniform3fv(light_properties.ambient, 1, light_data.ambient);
-	glUniform3fv(light_properties.diffuse, 1, light_data.diffuse);
-	glUniform3fv(light_properties.specular, 1, light_data.specular);
-	glUniform1f(light_properties.constant, light_data.constant);
-	glUniform1f(light_properties.linear, light_data.linear);
-	glUniform1f(light_properties.quadratic, light_data.quadratic);
+	glUniform3fv(cube.material.buffers.ambient, 1, cube.material.ambient);
+	glUniform3fv(cube.material.buffers.diffuse, 1, cube.material.diffuse);
+	glUniform3fv(cube.material.buffers.specular, 1, cube.material.specular);
+	glUniform1f(cube.material.buffers.shiny, cube.material.buffers.shiny);
+	glUniform3fv(light.buffers.position, 1, light.position);
+	glUniform3fv(light.buffers.ambient, 1, light.ambient);
+	glUniform3fv(light.buffers.diffuse, 1, light.diffuse);
+	glUniform3fv(light.buffers.specular, 1, light.specular);
+	glUniform1f(light.buffers.constant, light.constant);
+	glUniform1f(light.buffers.linear, light.linear);
+	glUniform1f(light.buffers.quadratic, light.quadratic);
 	glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 
 	//main loop
@@ -459,17 +426,17 @@ int main(int argc, char **argv) {
 		// compute normalize matrix (better to do it in cpu rather than gpu)
 		Normalize = glm::mat3(glm::transpose(glm::inverse(model)));
 		// load stuff into the buffer (buffer data then uniform)
-		glUniform3fv(square_material.ambient, 1, square_material_data.ambient);
-		glUniform3fv(square_material.diffuse, 1, square_material_data.diffuse);
-		glUniform3fv(square_material.specular, 1, square_material_data.specular);
-		glUniform1f(square_material.shiny, square_material_data.shiny);
-		glUniform3fv(light_properties.position, 1, light_data.position);
-		glUniform3fv(light_properties.ambient, 1, light_data.ambient);
-		glUniform3fv(light_properties.diffuse, 1, light_data.diffuse);
-		glUniform3fv(light_properties.specular, 1, light_data.specular);
-		glUniform1f(light_properties.constant, light_data.constant);
-		glUniform1f(light_properties.linear, light_data.linear);
-		glUniform1f(light_properties.quadratic, light_data.quadratic);
+		glUniform3fv(cube.material.buffers.ambient, 1, cube.material.ambient);
+		glUniform3fv(cube.material.buffers.diffuse, 1, cube.material.diffuse);
+		glUniform3fv(cube.material.buffers.specular, 1, cube.material.specular);
+		glUniform1f(cube.material.buffers.shiny, cube.material.buffers.shiny);
+		glUniform3fv(light.buffers.position, 1, light.position);
+		glUniform3fv(light.buffers.ambient, 1, light.ambient);
+		glUniform3fv(light.buffers.diffuse, 1, light.diffuse);
+		glUniform3fv(light.buffers.specular, 1, light.specular);
+		glUniform1f(light.buffers.constant, light.constant);
+		glUniform1f(light.buffers.linear, light.linear);
+		glUniform1f(light.buffers.quadratic, light.quadratic);
 		glUniform3fv(vec3_CameraPosition, 1, glm::value_ptr(camera.position));
 		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(camera.view));
