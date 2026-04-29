@@ -36,7 +36,8 @@ uniform Material material;
 uniform PointLight light;
 uniform sampler2D TEX;
 
-out vec4 FragColor;
+vec4 out FragColor;
+
 void main()
 {
 	vec3 ambient = light.ambient;

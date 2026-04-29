@@ -62,7 +62,7 @@ static float lasty = (float)height/2.f;
 
 static struct Object<8 * 24, 12> cube {
 	// vec3 verts, vec2 texCoords, vec3 normal
-	{
+	.vertex_data = {
 		// close face
 		0.5f,	0.5f,	0.5f,	0.f,	0.f,	0.f,	0.f,	1.f,	// top right
 		0.5f,	-0.5f,	0.5f,	0.f,	1.f,	0.f,	0.f,	1.f,	// bottom right
@@ -94,7 +94,7 @@ static struct Object<8 * 24, 12> cube {
 		0.5f,	-0.5f,	0.5f,	1.f,	1.f,	1.f,	0.f,	0.f,	// bottom right
 		0.5f,	0.5f,	0.5f,	0.f,	1.f,	1.f,	0.f,	0.f,	// top right
 	},
-	{
+	.indices = {
 		// close
 		0,	1,	2,
 		0,	2,	3,
@@ -114,12 +114,12 @@ static struct Object<8 * 24, 12> cube {
 		20,	21,	22,
 		20,	22,	23
 	},
-	{
-		{1.f, 	1.f,	1.f},
-		{1.f,	1.f,	1.f},
-		{1.f,	1.f,	1.f},
-		32.f,
-		{0,	0,	0,	0}
+	.material = {
+		.ambient = {1.f, 	1.f,	1.f},
+		.diffuse = {1.f,	1.f,	1.f},
+		.specular = {1.f,	1.f,	1.f},
+		.shiny = 32.f,
+		.buffers = {0,	0,	0,	0}
 	}
 };
 
@@ -268,6 +268,7 @@ int main(int argc, char **argv) {
 	char info[512];
 	int tex_width, tex_height, tex_nrChannels;
 	float oldtime, newtime, deltatime;
+	std::cout << sizeof(cube.vertex_data) << '\t' << sizeof(cube.indices) << '\n';
 	glfwSetErrorCallback(err_callback);
 	if (!glfwInit()) {
 		std::cerr << "Could not initialize glfw\n";
@@ -361,9 +362,9 @@ int main(int argc, char **argv) {
 	glGenBuffers(1, &element_buffer);
 	glBindVertexArray(vertex_array);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, cube.vertex_data_size, cube.vertex_data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube.vertex_data), cube.vertex_data, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, cube.indices_size, cube.indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube.indices), cube.indices, GL_STATIC_DRAW);
 	glVertexAttribPointer(vec3_vertPosition, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glVertexAttribPointer(vec2_TexCoords, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glVertexAttribPointer(vec3_vertNormal, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));

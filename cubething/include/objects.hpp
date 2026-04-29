@@ -42,6 +42,4 @@ struct Object {
 	float vertex_data[vertex_data_length];
 	float indices[num_of_tris * 3];
 	MATERIAL material;
-	size_t vertex_data_size = vertex_data_length * sizeof(float);
-	size_t indices_size = num_of_tris * 3 * sizeof(float);
 };
