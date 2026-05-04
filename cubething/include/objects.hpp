@@ -37,9 +37,8 @@ struct LIGHT {
 };
 
 
-template <size_t vertex_data_length, size_t num_of_tris>
 struct Object {
-	float vertex_data[vertex_data_length];
-	float indices[num_of_tris * 3];
+	std::vector<float> vertex_data;
+	std::vector<unsigned int> indices;
 	MATERIAL material;
 };

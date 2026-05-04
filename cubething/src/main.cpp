@@ -35,7 +35,7 @@ char *read_file(const char *path) {
 		std::cerr << "Could not get size of file: " << path << "t\n";
 		std::fclose(file);
 		return NULL;
-}
+	}
 	result = new char[(file_size + 1) * sizeof(char)];
 	std::rewind(file);
 	bytes_read = std::fread(result, sizeof(char), file_size, file);
@@ -60,7 +60,7 @@ CAMERA camera;
 static float lastx = (float)width/2.f;
 static float lasty = (float)height/2.f;
 
-static struct Object<8 * 24, 12> cube {
+static struct Object cube {
 	// vec3 verts, vec2 texCoords, vec3 normal
 	.vertex_data = {
 		// close face
@@ -260,7 +260,7 @@ int main(int argc, char **argv) {
 	const char tex_image_path[] = "./textures/Uzumaki-Junji-Ito.jpg";
 	unsigned char *tex_data;
 	char *vert_shader_source, *frag_shader_source;
-	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer, texture;
+	GLuint vert_shader, frag_shader, shader_program, vertex_buffer, vertex_array, element_buffer, texture, frame_buffer, framebuffer_texture;;
 	// buffer objects for shaders
 	GLint vec3_vertPosition, vec2_TexCoords, vec3_vertNormal;
 	GLint vec3_CameraPosition, mat4_model, mat4_view, mat4_projection, mat3_Normalize;
@@ -268,7 +268,6 @@ int main(int argc, char **argv) {
 	char info[512];
 	int tex_width, tex_height, tex_nrChannels;
 	float oldtime, newtime, deltatime;
-	std::cout << sizeof(cube.vertex_data) << '\t' << sizeof(cube.indices) << '\n';
 	glfwSetErrorCallback(err_callback);
 	if (!glfwInit()) {
 		std::cerr << "Could not initialize glfw\n";
@@ -362,15 +361,32 @@ int main(int argc, char **argv) {
 	glGenBuffers(1, &element_buffer);
 	glBindVertexArray(vertex_array);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cube.vertex_data), cube.vertex_data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * cube.vertex_data.size(), cube.vertex_data.data(), GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube.indices), cube.indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float) * cube.indices.size(), cube.indices.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(vec3_vertPosition, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glVertexAttribPointer(vec2_TexCoords, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glVertexAttribPointer(vec3_vertNormal, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(vec3_vertPosition);
 	glEnableVertexAttribArray(vec2_TexCoords);
 	glEnableVertexAttribArray(vec3_vertNormal);
+
+	// set up framebuffer
+	// create framebuffer
+	glGenFramebuffers(1, &frame_buffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+	// create framebuffer texture
+	glGenTextures(1, &framebuffer_texture);
+	glBindTexture(GL_TEXTURE_2D, framebuffer_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// attach the framebuffer
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebuffer_texture, 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		glfwTerminate();
+		return -1;
+	}
 
 	// texture stuff
 	stbi_set_flip_vertically_on_load(true);
@@ -414,6 +430,8 @@ int main(int argc, char **argv) {
 
 	//main loop
 	while (!glfwWindowShouldClose(window)) {
+		glSetFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glUseProgram(shader_program);
@@ -447,9 +465,16 @@ int main(int argc, char **argv) {
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		// second parameter - the number of indices specified, since opengl uses triangles, 2 triangles are needed to draw a square resulting in 6 vertices drawn
 		// fourth parameter - the offset of the indices
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+		glClearColor(1.f, 1.f, 1.f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		//
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+	glBindBuffer(GL_FRAMEBUFFER, 0); // unbind the created framebuffer
+	glDeleteBuffers(1, &frame_buffer); // delete the framebuffer when it is no longer needed
 	glfwTerminate();
 	return 0;
 }

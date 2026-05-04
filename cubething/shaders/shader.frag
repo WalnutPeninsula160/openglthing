@@ -36,7 +36,7 @@ uniform Material material;
 uniform PointLight light;
 uniform sampler2D TEX;
 
-vec4 out FragColor;
+out vec4 FragColor;
 
 void main()
 {
