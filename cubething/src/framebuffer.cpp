@@ -3,7 +3,7 @@
 
 frameBuffer::frameBuffer() {
 	glGenFramebuffers(1, &buffer);
-	glbingFramebuffer(GL_FRAMEBUFFER, buffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, buffer);
 	// set up vertex array and buffer objects
 	glGenVertexArrays(1, &vertex_array);
 	glGenBuffer(1, &vertex_buffer);
