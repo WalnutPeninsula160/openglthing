@@ -112,8 +112,8 @@ static struct Object cube {
 		0,	1,	2,
 		0,	2,	3,
 		// far
-		4,	5,	6,
-		4,	6,	7,
+		4,	6,	5,
+		4,	7,	6,
 		// top
 		8,	9,	10,
 		8,	10,	11,
@@ -427,7 +427,7 @@ int main(int argc, char **argv) {
 	light.buffers.quadratic = glGetUniformLocation(shader_program, "light.quadratic");
 	vec3_CameraPosition = glGetUniformLocation(shader_program, "viewPos");
 	for (unsigned int i {}; i < 4; i++) {
-		mat4_model[i] = glGetUniformLocation(shader_program, ("mat4_model[" + std::to_string(i) + "]").c_str());
+		mat4_model[i] = glGetUniformLocation(shader_program, ("model[" + std::to_string(i) + "]").c_str());
 		mat3_Normalize[i] = glGetUniformLocation(shader_program, ("Normalize[" + std::to_string(i) + "]").c_str());
 	}
 	mat4_view = glGetUniformLocation(shader_program, "view");
