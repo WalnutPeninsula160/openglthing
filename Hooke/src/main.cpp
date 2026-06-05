@@ -36,14 +36,18 @@ char *read_file(const char *path) {
 	return result;
 }
 
-typedef struct {
-	float position[2];
-	float velocity[2];
-	float mass;
-	float size;
-	GLuint vertex_buffer;
-	bool fixed;
-} mass_point;
+class mass_point {
+	private:
+	//
+	public:
+	mass_point(std::vector<float, 2> pos, std::vector<float, 2> vel, float m, float siz, bool f) {
+		position = vec2(pos.at(0), pos.at(1));
+		velocity = vec2(vel.at(0), vel.at(1));
+		mass = m;
+		size = siz;
+		fixed = f;
+		vertx_buffer = 0;
+		vertex_data = new float[6] {pos.at(0), pos.at(1)};
 
 mass_point fixed_point = {
 	.position = {0.f, 0.f}, 
