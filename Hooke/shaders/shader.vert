@@ -1,12 +1,14 @@
 #version 330 core
 
-in vec2 vertPosition;
+layout (location = 0) in vec2 vertPosition;
 
-uniform float size;
 uniform mat4 projection;
+uniform mat4 view;
 uniform mat4 model;
 
-void main() {
-	gl_Position = projection * model * vec4(vertPosition.xy, 1.0, 1.0);
-	gl_PointSize = gl_Position.z;
+void main()
+{
+	vec4 temp = model * vec4(vertPosition.xy, -1.0, 1.0) + vec4(300.f, 200.f, 0.f, 0.f);
+	gl_Position = projection * view * temp;
+	gl_PointSize = 10.0;
 }
