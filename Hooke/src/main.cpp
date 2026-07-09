@@ -41,6 +41,8 @@ char *read_file(const char *path) {
 	return result;
 }
 
+double oldtime {}, newtime {}, deltatime {};
+
 float mass_point[2] = {
 	0.f,	0.f
 };
@@ -112,7 +114,6 @@ int main() {
 	}
 	glfwGetFramebufferSize(window, &W, &H);
 	glViewport(0, 0, W, H);
-	std::cout << W << '\t' << H << std::endl;
 	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	vertex_shader_source = read_file(vertex_shader_path);
 	glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
@@ -165,12 +166,16 @@ int main() {
 	glUniformMatrix4fv(mat4_projection,1, GL_FALSE, glm::value_ptr(projection));
 	glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 	//
+	newtime = glfwGetTime();
 	while (!glfwWindowShouldClose(window)) {
+		// deltatime
+		oldtime = newtime;
+		newtime = glfwGetTime();
+		deltatime = newtime - oldtime;
 		// put physics sim here
-/*
 		apply_hookes_law(&mp_position, &center_point_position, &mp_velocity, stiffness, rest_length, mp_m);
 		apply_velocity(&mp_position, &model, &mp_velocity);
-*/
+		// render!
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shader_program);
