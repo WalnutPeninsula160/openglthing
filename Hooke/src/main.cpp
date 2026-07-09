@@ -57,8 +57,7 @@ glm::vec2 mp_velocity = glm::vec2(0.f, 0.f);
 float mp_m = 10;
 glm::vec2 center_point_position = glm::vec2(0.f, 0.f);
 
-glm::mat4 projection = glm::ortho(0.f, (float)width, 0.f, (float)height, 0.1f, 100.f);
-glm::mat4 view = glm::mat4(1.f);
+glm::mat4 projection = glm::ortho(-(float)width/2, (float)width/2, -(float)height/2, (float)height/2, 0.1f, 100.f);
 glm::mat4 model = glm::mat4(1.f);
 
 float stiffness = 10.f;
@@ -81,7 +80,7 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
 	width = w;
 	height = h;
 	glViewport(0, 0, width, height);
-	projection = glm::ortho(0.f, (float)width, 0.f, (float)height, 0.1f, 100.f);
+	projection = glm::ortho(-(float)width/2, (float)width/2, -(float)height/2, (float)height/2, 0.1f, 100.f);
 }
 
 int main() {
@@ -91,8 +90,9 @@ int main() {
 	char *fragment_shader_source = nullptr;
 	char *info_log = new char [1024];
 	int success {};
+	int W {}, H {};
 	GLuint shader_program, vertex_shader, fragment_shader, vertex_buffer, vertex_array;
-	GLint vec2_vertPosition, vec4_Color, mat4_projection, mat4_view, mat4_model;
+	GLint vec2_vertPosition, vec4_Color, mat4_projection, mat4_model;
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -110,7 +110,9 @@ int main() {
 		glfwTerminate();
 		return -1;
 	}
-	glViewport(0, 0, width, height);
+	glfwGetFramebufferSize(window, &W, &H);
+	glViewport(0, 0, W, H);
+	std::cout << W << '\t' << H << std::endl;
 	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	vertex_shader_source = read_file(vertex_shader_path);
 	glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
@@ -147,7 +149,6 @@ int main() {
 	vec2_vertPosition = glGetAttribLocation(shader_program, "vertPosition");
 	vec4_Color = glGetUniformLocation(shader_program, "Color");
 	mat4_projection = glGetUniformLocation(shader_program, "projection");
-	mat4_view = glGetUniformLocation(shader_program, "view");
 	mat4_model = glGetUniformLocation(shader_program, "model");
 	glGenVertexArrays(1, &vertex_array);
 	glGenBuffers(1, &vertex_buffer);
@@ -162,19 +163,19 @@ int main() {
 	glUseProgram(shader_program);
 	glUniform4fv(vec4_Color, 1, color);
 	glUniformMatrix4fv(mat4_projection,1, GL_FALSE, glm::value_ptr(projection));
-	glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 	//
 	while (!glfwWindowShouldClose(window)) {
 		// put physics sim here
+/*
 		apply_hookes_law(&mp_position, &center_point_position, &mp_velocity, stiffness, rest_length, mp_m);
 		apply_velocity(&mp_position, &model, &mp_velocity);
+*/
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shader_program);
 		glUniform4fv(vec4_Color, 1, color);
 		glUniformMatrix4fv(mat4_projection,1, GL_FALSE, glm::value_ptr(projection));
-		glUniformMatrix4fv(mat4_view, 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(mat4_model, 1, GL_FALSE, glm::value_ptr(model));
 		glBindVertexArray(vertex_array);
 		glDrawArrays(GL_POINTS, 0, 1);
