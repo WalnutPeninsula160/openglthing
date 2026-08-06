@@ -28,13 +28,15 @@ char *read_file(const char *path) {
 	return result;
 }
 
-program::program(GLenum *buffers) {
+program::program() {
 	glCreateProgram(shader_program);
 	glGenVertexArrays(1, &VAO);
-
+	buffers = new GLint[14]{};
+	buffer_offsets = new size_t[14]{};
+	glGenBuffers
 };
 
-program::compile_shader(const char *path, GLenum type) {
+void program::compile_shader(const char *path, GLenum type) {
 	GLint shader_object;
 	char *source;
 	int success {};
@@ -49,48 +51,38 @@ program::compile_shader(const char *path, GLenum type) {
 	glCompileShader(shader_object);
 	glGetShaderiv(shader_object, GL_COMPILE_STATUS, &success);
 	if (!success) {
-		glGetShaderInfoLog(shader_object, 1024, NULL, &info);
-		std::cerr << "Could not copmile shader at " << path << "\nError: \n" << info << '/n';
+		glGetShaderInfoLog(shader_object, 1024, NULL, info);
+		std::cerr << "Could not copmile shader at " << path << "\nError: \n" << info << '\n';
 	}
 	glAttachShader(shader_program, shader_object);
 	glLinkProgram(shader_program);
 	glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
 	if (!success) {
-		glGetProgramInfoLog(shader_program, 1024, NULL, &info);
-		std::cerr << "Could not link shader program\nError:\n" << info << '/n';
+		glGetProgramInfoLog(shader_program, 1024, NULL, info);
+		std::cerr << "Could not link shader program\nError:\n" << info << '\n';
 	}
 	glDeleteShader(shader_object);
 }
 
-program::add_buffer(GLenum type) {
-	if (buffers.contains(type)) {
-		std::cerr << "Buffer of this type already exists\n";
-		exit(-1);
-	}
-	buffers.insert({type, 0});
-	buffer_offsets.insert({type, 0});
-	glGenBuffers(1, &buffers[type]);
-}
-
-program::buffer_data(GLenum buffer, GLsizeiptr siz, const void *data, GLenum usage) {
-	glBindBuffer(buffer, buffers[buffer]);
+void program::buffer_data_f(GLenum buffer, GLsizeiptr siz, const void *data, GLenum usage, size_t buffer_index) {
+	glBindBuffer(buffer, buffers[buffer_index]);
 	glBufferData(buffer, siz, data, usage);
 	glBindBuffer(buffer, 0);
-	buffer_offsets[buffer] = siz;
+	buffer_offsets[buffer_index] = siz;
 }
 
-program::buffer_append_data(GLenum buffer, GLsizeiptr siz, const void *data) {
-	glBindBuffer(buffer, buffers[buffer]);
-	glBufferSubData(buffer, buffer_offsets[buffer], siz, data);
+void program::buffer_append_data_f(GLenum buffer, GLsizeiptr siz, const void *data, size_t buffer_index) {
+	glBindBuffer(buffer, buffers[buffer_index]);
+	glBufferSubData(buffer, buffer_offsets[buffer_index], siz, data);
 	glBindBuffer(buffer, 0);
-	buffer_offsets[buffer] += siz;
+	buffer_offsets[buffer_index] += siz;
 }
 
-program::configure_VA_attribs(GLuint locations[], GLint sizes[], GLboolean normalized[], GLsizei strides[], const void *pointers[], size_t num_attribs) {
+void program::configure_VA_attribs(GLuint locations[], GLenum types[], GLint sizes[], GLboolean normalized[], GLsizei strides[], const void *pointers[], size_t num_attribs) {
 	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
 	for (size_t i {}; i < num_attribs; i++) {
-		glVertexAttribPointer(locations[i], sizes[i], normalized[i], strides[i], pointers[i]);
+		glVertexAttribPointer(locations[i], types[i], sizes[i], normalized[i], strides[i], pointers[i]);
 		glEnableVertexAttribPointer(locations[i]);
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
