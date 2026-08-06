@@ -54,7 +54,7 @@ float color[4] = {
 int width = 600;
 int height = 400;
 
-glm::vec2 mp_position = glm::vec2(0.f, 0.f);
+glm::vec2 mp_position = glm::vec2(5.f, 0.f);
 glm::vec2 mp_velocity = glm::vec2(0.f, 0.f);
 float mp_m = 10;
 glm::vec2 center_point_position = glm::vec2(0.f, 0.f);
@@ -65,17 +65,13 @@ glm::mat4 model = glm::mat4(1.f);
 float stiffness = 10.f;
 float rest_length = 10.f;
 
-void apply_hookes_law(glm::vec2 *a, glm::vec2 *b, glm::vec2 *v, float K, float rx, float m) {
-	float x = rx - glm::length(*a - *b);
+glm::vec2 apply_hookes_law_2D(glm::vec2 a, glm::vec2 b, glm::vec2 v, float K, float rx, float m) {
+	float x = rx - glm::length(a - b);
 	float F = K * x;
-	glm::vec2 udirection = glm::normalize(*b - *a);
+	glm::vec2 udirection = glm::normalize(b - a);
 	glm::vec2 acceleration = (F / m) * udirection;
-	*v+= acceleration;
-}
-
-void apply_velocity(glm::vec2 *a, glm::mat4 *A, glm::vec2 *v) {
-	*a += *v;
-	*A = glm::translate(*A, glm::vec3(*a, 0.f));
+	std::cout << '(' << a.x << ',' << a.y << ")\n";
+	return v + acceleration;
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
@@ -83,6 +79,19 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
 	height = h;
 	glViewport(0, 0, width, height);
 	projection = glm::ortho(-(float)width/2, (float)width/2, -(float)height/2, (float)height/2, 0.1f, 100.f);
+}
+
+void keystroke_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+	if (action == GLFW_PRESS) {
+		switch (key) {
+			case GLFW_KEY_TAB:
+			case GLFW_KEY_ESCAPE:
+				glfwSetWindowShouldClose(window, true);
+				break;
+			default:
+				break;
+		}
+	}
 }
 
 int main() {
@@ -107,6 +116,7 @@ int main() {
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetKeyCallback(window, keystroke_callback);
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cerr << "Could not initialize glad\n";
 		glfwTerminate();
@@ -173,8 +183,9 @@ int main() {
 		newtime = glfwGetTime();
 		deltatime = newtime - oldtime;
 		// put physics sim here
-		apply_hookes_law(&mp_position, &center_point_position, &mp_velocity, stiffness, rest_length, mp_m);
-		apply_velocity(&mp_position, &model, &mp_velocity);
+		mp_velocity = apply_hookes_law_2D(mp_position, center_point_position, mp_velocity, stiffness, rest_length, mp_m);
+		mp_position += mp_velocity;
+		model = glm::translate(model, glm::vec3(mp_velocity, 0.f));
 		// render!
 		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT);
