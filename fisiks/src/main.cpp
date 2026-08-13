@@ -7,42 +7,19 @@
 #include <GLFW/glfw3.h>
 // stbi include
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+//#include "stb_image.h"
 // glm include
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+// general include
+
+// standard library include
+#include "objects.hpp"
+#include "shaders.hpp"
 
 #define SCR_WIDTH 900
 #define SCR_HEIGHT 600
-
-char *read_file(const char *path) { 
-	FILE *file = std::fopen(path, "rb");
-	char *result;
-	long file_size;
-	size_t bytes_read;
-	if (!file) {
-		std::cerr << "Could not open file: " << path << '\n';
-		return NULL;
-	}
-	std::fseek(file, 0, SEEK_END);
-	file_size = std::ftell(file);
-	if (-1 == file_size) {
-		std::cerr << "Could not get size of file: " << path << "t\n";
-		std::fclose(file);
-		return NULL;
-	}
-	result = new char[(file_size + 1) * sizeof(char)];
-	std::rewind(file);
-	bytes_read = std::fread(result, sizeof(char), file_size, file);
-	std::fclose(file);
-	if (file_size != bytes_read) {
-		std::cerr << "Could not read file: " << path << "\n";
-		return NULL;
-	}
-	result[file_size] = '\0';
-	return result;
-}
 
 double oldtime {}, newtime {}, deltatime {};
 
@@ -128,6 +105,7 @@ int main() {
 	char *fragment_shader_source = nullptr;
 	char *info = new char[1024];
 	int W {}, H {};
+	program shader = program();
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);

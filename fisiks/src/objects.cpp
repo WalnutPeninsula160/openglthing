@@ -1,84 +1,74 @@
 #include "objects.hpp"
+#include "shaders.hpp"
 
-int objInit(GLuint *TEX_placeholder, unsigned char *placeholder_tex_data, int w, int h) {
-	unsigned char white[4] = {255, 255, 255, 255};
-	glGenTextures(1, TEX_placeholder);
-	glBindTexture(GL_TEXTURE_2D, TEX_placeholder);
+void initMaterial(MATERIAL *mat, GLuint ambient_tex, GLuint diffuse_tex, GLuint specular_tex, float shiny_scal) {
+	mat->ambient = ambient_tex;
+	mat->diffuse = diffuse_tex;
+	mat->specular = specular_tex;
+	mat->shiny = shiny_scal;
+}
+
+GLuint newImageTextures(unsigned char *tex_data, GLsizei w, GLsizei h) {
+	unsigned char magenta[4] = {255, 0, 255, 255};
+	GLuint texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	if (placeholder_tex_data) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, placeholder_tex_data);
-	} else {
-		std::cerr << "Invalid placeholder texture data pointer. Using default white instead\n";
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, white);
+	if (tex_data)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
+	else {
+		std::cerr << "Invalid texture data pointer. Using default magenta instead\n";
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, magenta);
 	}
+	glBindTexture(GL_TEXTURE_2D, 0);
+	return texture;
 }
 
-Object::Object(GLenum mode) {
-	switch (mode) {
-		case GL_POINTS:
-		case GL_LINES:
-		case GL_LINE_LOOP:
-		case GL_LINE_STRIP:
-		case GL_LINE_STRIP_ADJACENCY:
-		case GL_LINES_ADJACENCY:
-		case GL_TRIANGLE_STRIP:
-		case GL_TRIANCLE_FAN:
-		case GL_TRIANGLES:
-		case GL_TRIANGLE_STRIP_ADJACENCY:
-		case GL_TRIANGLES_ADJACENCY:
-		case GL_PATCHES:
-			draw_mode = mode;
-			break;
-		default:
-			std::cerr << "Invalid draw mode\n";
-			exit(-1);
-	}
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
+template <typename T>
+GLuint newColorTexture(std::vector<T> color, GLenum t) {
+	GLuint texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, t, color);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-Object::load_vertex_data(void *data_addr, size_t data_size, GLenum usage) {
-	if (!data_addr) {
-		std::cerr << "Invalid data buffer address\n";
+Object::Object(program *shader, GLint _indices, GLsizei _instances, GLenum _draw_mode) {
+	if (!instances) {
+		std::cerr << "Cannot initialize object with no instances\n";
 		exit(-1);
 	}
-	glBindBuffer(GL_VERTEX_BUFFER, VB0);
-	glBufferData(GL_VERTEX_BUFFER, data_size, data_addr, usage);
-	glBindBuffer(GL_VERTEX_BUFFER, 0);
+	models = std::vector<glm::mat4>(instances, glm::mat4(1.f));
+	Normals = std::vector<glm::mat3>(instances, glm::mat3(1.f));
+	indices = _indices;
+	instances = _instances;
+	draw_mode = _draw_mode;
 }
 
-Object::load_element_data(void *indices_addr, size_t indices_size, GLenum usage, GLenum type) {
-	if (!indices_addr) {
-		std::cerr << "Invalid element buffer address\n";
-		exit(-1);
+Object::~Object() {}
+
+void Object::initVertexData(program *shader, GLsizeiptr siz, const void *data) {
+	if (!indices) {
+		count = siz / shader->element_size;
+		constexpr size_t buf = match_buffer(GL_ELEMENT_ARRAY_BUFFER);
+		first = shader->buffer_offsets[buf] / shader->element_size;
 	}
-	indexed = true;
-	index_type = type;
-	glBindbuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicies_size, indicies_addr, usage);
-	glbindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+	shader->buffer_append_data(GL_ARRAY_BUFFER, siz, data);
+
 }
 
-Object::~Object() {
-}
-
-void Object::configure_vertex_attributes(GLuint *index, GLint *size, GLenum *type, GLboolean *normalized, GLsizei *stride, const void **ptr, size_t attrib_cnt) {
-	glBindBuffer(GL_VERTEX_BUFFER, VBO);
-	for (size_t i; i < attrib_cnt; i++) {
-		glVertexAttribPointer(index[i], size[i], type[i], normalized[i], stride[i], ptr[i]);
-		glEnableVertexAttribArray(index[i]);
+void Object::initElementData(program *shader, GLsizeiptr siz, const void *data) {
+	if (indices) {
+		count = siz / shader->element_size;
+		constexpr size_t buf = match_buffer(GL_ELEMENT_ARRAY_BUFFER);
+		indices_ptr = shader->buffer_offsets[buf];
 	}
-	glBindBuffer(GL_VERTEX_BUFFER, 0);
-}
-
-void Object::draw(GLsizei index_count, const void *index_offset) {
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glDrawElements(draw_mode, index_count, index_type, index_offset);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	shader->buffer_append_data(GL_ELEMENT_ARRAY_BUFFER, siz, data);
 }

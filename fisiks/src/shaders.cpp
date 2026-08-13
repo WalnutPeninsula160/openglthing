@@ -29,12 +29,14 @@ char *read_file(const char *path) {
 }
 
 program::program() {
-	glCreateProgram(shader_program);
+	shader_program = glCreateProgram();
 	glGenVertexArrays(1, &VAO);
-	buffers = new GLint[14]{};
-	buffer_offsets = new size_t[14]{};
-	glGenBuffers
-};
+	buffers = new GLuint[14]{};
+	buffer_offsets = new GLsizeiptr[14]{};
+	glGenBuffers(14, &buffers[0]);
+}
+
+program::~program() {}
 
 void program::compile_shader(const char *path, GLenum type) {
 	GLint shader_object;
@@ -79,12 +81,31 @@ void program::buffer_append_data_f(GLenum buffer, GLsizeiptr siz, const void *da
 }
 
 void program::configure_VA_attribs(GLuint locations[], GLenum types[], GLint sizes[], GLboolean normalized[], GLsizei strides[], const void *pointers[], size_t num_attribs) {
+	vertex_size = 0;
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
 	for (size_t i {}; i < num_attribs; i++) {
+		vertex_size += sizes[i];
 		glVertexAttribPointer(locations[i], types[i], sizes[i], normalized[i], strides[i], pointers[i]);
-		glEnableVertexAttribPointer(locations[i]);
+		glEnableVertexAttribArray(locations[i]);
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(VAO);
+}
+
+void draw_object(Object *obj) {
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[6]);
+	if (obj->indices) {
+		if (obj->instances > 1)
+			glDrawElementsInstanced();
+		else 
+			glDrawElements();
+	} else {
+		if (obj->instances > 1)
+			glDrawArraysInstanced();
+		else
+			glDrawArrays();
+	}
+	glBindVertexArray(0);
 }
