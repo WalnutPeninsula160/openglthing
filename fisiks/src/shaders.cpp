@@ -28,17 +28,15 @@ char *read_file(const char *path) {
 	return result;
 }
 
-program::program() {
+Program::Program(GLenum buffers, size_t num_buffers) {
 	shader_program = glCreateProgram();
 	glGenVertexArrays(1, &VAO);
-	buffers = new GLuint[14]{};
-	buffer_offsets = new GLsizeiptr[14]{};
-	glGenBuffers(14, &buffers[0]);
+	std::vector<GLuint> buffers
 }
 
-program::~program() {}
+Program::~Program() {}
 
-void program::compile_shader(const char *path, GLenum type) {
+void Program::compile_shader(const char *path, GLenum type) {
 	GLint shader_object;
 	char *source;
 	int success {};
@@ -66,21 +64,18 @@ void program::compile_shader(const char *path, GLenum type) {
 	glDeleteShader(shader_object);
 }
 
-void program::buffer_data_f(GLenum buffer, GLsizeiptr siz, const void *data, GLenum usage, size_t buffer_index) {
-	glBindBuffer(buffer, buffers[buffer_index]);
-	glBufferData(buffer, siz, data, usage);
-	glBindBuffer(buffer, 0);
-	buffer_offsets[buffer_index] = siz;
+void Program::buffer_data(GLenum buffer, GLsizeiptr siz, const void *data, GLenum usage) {
+	if (!buffers.contains(buffer_type)) {
+		buffers.insert({buffer_type, {0,0}});
+		glGenBuffers(&buffers[buffer_type].id);
+	}
+	glBindBuffer(buffer_type, buffers[buffer_type].id);
+	glBufferData(buffer_type, siz, data, usage);
+	glBindBuffer(buffer_type, 0);
+	buffers[buffer_type].offset = siz;
 }
 
-void program::buffer_append_data_f(GLenum buffer, GLsizeiptr siz, const void *data, size_t buffer_index) {
-	glBindBuffer(buffer, buffers[buffer_index]);
-	glBufferSubData(buffer, buffer_offsets[buffer_index], siz, data);
-	glBindBuffer(buffer, 0);
-	buffer_offsets[buffer_index] += siz;
-}
-
-void program::configure_VA_attribs(GLuint locations[], GLenum types[], GLint sizes[], GLboolean normalized[], GLsizei strides[], const void *pointers[], size_t num_attribs) {
+void Program::configure_VA_attribs(GLuint locations[], GLenum types[], GLint sizes[], GLboolean normalized[], GLsizei strides[], const void *pointers[], size_t num_attribs) {
 	vertex_size = 0;
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
@@ -93,7 +88,7 @@ void program::configure_VA_attribs(GLuint locations[], GLenum types[], GLint siz
 	glBindVertexArray(VAO);
 }
 
-void draw_object(Object *obj) {
+void Program::draw_object(Object *obj, GLenum draw_mode, ) {
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[6]);
 	if (obj->indices) {

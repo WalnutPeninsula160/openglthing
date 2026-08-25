@@ -40,7 +40,7 @@ GLuint newColorTexture(std::vector<T> color, GLenum t) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-Object::Object(program *shader, GLint _indices, GLsizei _instances, GLenum _draw_mode) {
+Object::Object(Program *shader, GLint _indices, GLsizei _instances, GLenum _draw_mode) {
 	if (!instances) {
 		std::cerr << "Cannot initialize object with no instances\n";
 		exit(-1);
@@ -54,7 +54,7 @@ Object::Object(program *shader, GLint _indices, GLsizei _instances, GLenum _draw
 
 Object::~Object() {}
 
-void Object::initVertexData(program *shader, GLsizeiptr siz, const void *data) {
+void Object::initVertexData(Program *shader, GLsizeiptr siz, const void *data) {
 	if (!indices) {
 		count = siz / shader->element_size;
 		constexpr size_t buf = match_buffer(GL_ELEMENT_ARRAY_BUFFER);
@@ -64,7 +64,7 @@ void Object::initVertexData(program *shader, GLsizeiptr siz, const void *data) {
 
 }
 
-void Object::initElementData(program *shader, GLsizeiptr siz, const void *data) {
+void Object::initElementData(Program *shader, GLsizeiptr siz, const void *data) {
 	if (indices) {
 		count = siz / shader->element_size;
 		constexpr size_t buf = match_buffer(GL_ELEMENT_ARRAY_BUFFER);

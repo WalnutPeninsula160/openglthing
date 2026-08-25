@@ -105,7 +105,7 @@ int main() {
 	char *fragment_shader_source = nullptr;
 	char *info = new char[1024];
 	int W {}, H {};
-	program shader = program();
+	Program shader = Program();
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
