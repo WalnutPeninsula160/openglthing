@@ -33,10 +33,11 @@ class Program {
 		size_t vertex_size;
 		GLuint shader_program, VAO;
 		std::vector<GLuint> uniform_locations;
-		Program();
+		Program(std::vector<GLenum> buffers);
 		~Program();
 		void compile_shader(const char *source, GLenum type);
-		void buffer_data(GLenum buffer_type, GLsizeiptr, siz, const void *data, GLenum usage);
+		void buffer_data(GLenum buffer_type, GLsizeiptr siz, const void *data, GLenum usage);
+		void buffer_append_data(GLenum buffer_type, GLsizeiptr siz, const void *data, GLenum usage);
 		void configure_VA_attribs(GLuint locations[], GLenum types[], GLint sizes[], GLboolean normalized[], GLsizei strides[], const void *pointers[], size_t num_attribs);
 		void draw_object(Object *obj);
 		void draw_sequential_objects(Object *objs[]);

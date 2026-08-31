@@ -28,10 +28,12 @@ char *read_file(const char *path) {
 	return result;
 }
 
-Program::Program(GLenum buffers, size_t num_buffers) {
+Program::Program(std::vector<GLenum> program_buffers) {
 	shader_program = glCreateProgram();
 	glGenVertexArrays(1, &VAO);
-	std::vector<GLuint> buffers
+	for (GLenum buffer : program_buffers) {
+		buffers.insert({buffer, {0,0}});
+	}
 }
 
 Program::~Program() {}
@@ -64,15 +66,40 @@ void Program::compile_shader(const char *path, GLenum type) {
 	glDeleteShader(shader_object);
 }
 
-void Program::buffer_data(GLenum buffer, GLsizeiptr siz, const void *data, GLenum usage) {
+void Program::buffer_data(GLenum buffer_type, GLsizeiptr siz, const void *data, GLenum usage) {
 	if (!buffers.contains(buffer_type)) {
 		buffers.insert({buffer_type, {0,0}});
-		glGenBuffers(&buffers[buffer_type].id);
+		glGenBuffers(1, &buffers[buffer_type].id);
 	}
 	glBindBuffer(buffer_type, buffers[buffer_type].id);
 	glBufferData(buffer_type, siz, data, usage);
 	glBindBuffer(buffer_type, 0);
 	buffers[buffer_type].offset = siz;
+}
+
+void Program::buffer_append_data(GLenum buffer_type, GLsizeiptr siz, const void *data, GLenum usage) {
+	GLuint new_buffer;
+	if (!buffers.contains(buffer_type)) {
+		buffers.insert({buffer_type, {0,0}});
+		glGenBuffers(1, &buffers[buffer_type].id);
+		glbindBuffer(buffer_type, buffers[buffer_type].id);
+		glBufferData(buffer_type, siz, data, usage); 
+		glBindBuffer(buffer_type, 0);
+		buffers[buffer_type].offset = siz;
+		return;
+	}
+	glGenBuffers(1, &new_buffer);
+	glBindBuffer(buffer_type, new_buffer);
+	glBufferData(buffer_type, buffers[buffer_type].id + siz, nullptr, usage);
+	glBindBuffer(GL_COPY_READ_BUFFER, buffers[buffer_type].id);
+	glBindBuffer(GL_COPY_WRITE_BUFFER, new_buffer);
+	glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, buffers[buffer_type].siz);
+	glBindBuffer(GL_COPY_READ_BUFFER, 0);
+	glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+	glBufferSubData(buffer_type, buffers[buffer_type].offset, siz, data);
+	buffers[buffer_type].id = new_buffer;
+	glBindBuffer(buffer_type, 0);
+	buffers[buffer_type].offset += siz;
 }
 
 void Program::configure_VA_attribs(GLuint locations[], GLenum types[], GLint sizes[], GLboolean normalized[], GLsizei strides[], const void *pointers[], size_t num_attribs) {
