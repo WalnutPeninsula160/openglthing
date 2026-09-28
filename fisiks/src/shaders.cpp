@@ -82,7 +82,7 @@ void Program::buffer_append_data(GLenum buffer_type, GLsizeiptr siz, const void 
 	if (!buffers.contains(buffer_type)) {
 		buffers.insert({buffer_type, {0,0}});
 		glGenBuffers(1, &buffers[buffer_type].id);
-		glbindBuffer(buffer_type, buffers[buffer_type].id);
+		glBindBuffer(buffer_type, buffers[buffer_type].id);
 		glBufferData(buffer_type, siz, data, usage); 
 		glBindBuffer(buffer_type, 0);
 		buffers[buffer_type].offset = siz;
@@ -115,7 +115,7 @@ void Program::configure_VA_attribs(GLuint locations[], GLenum types[], GLint siz
 	glBindVertexArray(VAO);
 }
 
-void Program::draw_object(Object *obj, GLenum draw_mode, ) {
+void Program::draw_object(Object *obj) {
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[6]);
 	if (obj->indices) {

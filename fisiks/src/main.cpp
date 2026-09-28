@@ -105,7 +105,7 @@ int main() {
 	char *fragment_shader_source = nullptr;
 	char *info = new char[1024];
 	int W {}, H {};
-	Program shader = Program({GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER});
+	Program shader = Program({GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER});//
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
