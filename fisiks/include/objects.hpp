@@ -43,7 +43,8 @@ class Object {
 		GLint first {};
 		void *indices_ptr = nullptr;
 		size_t indices {}, instances {};
-		Object(Program shader, GLint indices, GLsizei instances);
+		GLenum mode, index_type;
+		Object(Program *shader, GLint indices, GLsizei instances, GLenum );
 		~Object();
 		void initVertexData(Program *shader, GLsizeiptr siz, const void *data);
 		void initElementData(Program *shader, GLsizeiptr siz, const void *data);

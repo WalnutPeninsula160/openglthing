@@ -21,8 +21,9 @@
 
 class Object;
 
-typedef struct {
-	size_t offset;
+// TODO: add a data type size variable to this
+typede struct {
+	size_t siz;
 	GLuint id;
 } buffer_t;
 

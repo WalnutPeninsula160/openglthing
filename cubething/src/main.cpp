@@ -207,7 +207,7 @@ void err_callback(int err, const char *desc) {
 }
 
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-	bool act = true;
+	bool act = (action != GLFW_RELEASE);
 	if (key == GLFW_KEY_TAB || key == GLFW_KEY_ESCAPE) {
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 		return;

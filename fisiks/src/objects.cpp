@@ -40,7 +40,7 @@ GLuint newColorTexture(std::vector<T> color, GLenum t) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-Object::Object(Program *shader, GLint _indices, GLsizei _instances, GLenum _draw_mode) {
+Object::Object(Program *shader, GLint _indices, GLsizei _instances, GLenum _mode) {
 	if (!instances) {
 		std::cerr << "Cannot initialize object with no instances\n";
 		exit(-1);
@@ -49,26 +49,23 @@ Object::Object(Program *shader, GLint _indices, GLsizei _instances, GLenum _draw
 	Normals = std::vector<glm::mat3>(instances, glm::mat3(1.f));
 	indices = _indices;
 	instances = _instances;
-	draw_mode = _draw_mode;
+	mode = _mode;
 }
 
 Object::~Object() {}
 
 void Object::initVertexData(Program *shader, GLsizeiptr siz, const void *data) {
-	if (!indices) {
-		count = siz / shader->element_size;
-		constexpr size_t buf = match_buffer(GL_ELEMENT_ARRAY_BUFFER);
-		first = shader->buffer_offsets[buf] / shader->element_size;
-	}
 	shader->buffer_append_data(GL_ARRAY_BUFFER, siz, data);
-
 }
 
 void Object::initElementData(Program *shader, GLsizeiptr siz, const void *data) {
+	// TODO: remove this. indices will be automatically assumed
 	if (indices) {
 		count = siz / shader->element_size;
 		constexpr size_t buf = match_buffer(GL_ELEMENT_ARRAY_BUFFER);
 		indices_ptr = shader->buffer_offsets[buf];
 	}
+	count = siz / shader->buffers[GL_ELEMENT_ARRAY_BUFFER].elem_size;
+	indices_ptr = shader->buffers[GL_ELEMENT_ARRAY_BUFFER].siz;
 	shader->buffer_append_data(GL_ELEMENT_ARRAY_BUFFER, siz, data);
 }

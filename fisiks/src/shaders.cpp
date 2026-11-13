@@ -74,7 +74,7 @@ void Program::buffer_data(GLenum buffer_type, GLsizeiptr siz, const void *data, 
 	glBindBuffer(buffer_type, buffers[buffer_type].id);
 	glBufferData(buffer_type, siz, data, usage);
 	glBindBuffer(buffer_type, 0);
-	buffers[buffer_type].offset = siz;
+	buffers[buffer_type].siz = siz;
 }
 
 void Program::buffer_append_data(GLenum buffer_type, GLsizeiptr siz, const void *data, GLenum usage) {
@@ -85,7 +85,7 @@ void Program::buffer_append_data(GLenum buffer_type, GLsizeiptr siz, const void 
 		glBindBuffer(buffer_type, buffers[buffer_type].id);
 		glBufferData(buffer_type, siz, data, usage); 
 		glBindBuffer(buffer_type, 0);
-		buffers[buffer_type].offset = siz;
+		buffers[buffer_type].siz = siz;
 		return;
 	}
 	glGenBuffers(1, &new_buffer);
@@ -96,16 +96,16 @@ void Program::buffer_append_data(GLenum buffer_type, GLsizeiptr siz, const void 
 	glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, buffers[buffer_type].siz);
 	glBindBuffer(GL_COPY_READ_BUFFER, 0);
 	glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
-	glBufferSubData(buffer_type, buffers[buffer_type].offset, siz, data);
+	glBufferSubData(buffer_type, buffers[buffer_type].siz, siz, data);
 	buffers[buffer_type].id = new_buffer;
 	glBindBuffer(buffer_type, 0);
-	buffers[buffer_type].offset += siz;
+	buffers[buffer_type].siz += siz;
 }
 
 void Program::configure_VA_attribs(GLuint locations[], GLenum types[], GLint sizes[], GLboolean normalized[], GLsizei strides[], const void *pointers[], size_t num_attribs) {
 	vertex_size = 0;
 	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, buffers[0].id);
 	for (size_t i {}; i < num_attribs; i++) {
 		vertex_size += sizes[i];
 		glVertexAttribPointer(locations[i], types[i], sizes[i], normalized[i], strides[i], pointers[i]);
@@ -117,17 +117,11 @@ void Program::configure_VA_attribs(GLuint locations[], GLenum types[], GLint siz
 
 void Program::draw_object(Object *obj) {
 	glBindVertexArray(VAO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[6]);
-	if (obj->indices) {
-		if (obj->instances > 1)
-			glDrawElementsInstanced();
-		else 
-			glDrawElements();
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[6].id);
+	if (obj->instances > 1) {
+		glDrawElementsInstanced(obj->mode, obj->indices, obj->index_type, obj->indices_ptr, obj->instances);
 	} else {
-		if (obj->instances > 1)
-			glDrawArraysInstanced();
-		else
-			glDrawArrays();
+		glDrawElements(obj->mode, obj->indices, obj->index_type, obj->indices_ptr);
 	}
 	glBindVertexArray(0);
 }
