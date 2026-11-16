@@ -21,9 +21,8 @@
 
 class Object;
 
-// TODO: add a data type size variable to this
-typede struct {
-	size_t siz;
+typedef struct {
+	GLsizei siz;
 	GLuint id;
 } buffer_t;
 
@@ -33,7 +32,7 @@ class Program {
 		std::unordered_map<GLenum, buffer_t> buffers;
 		size_t vertex_size;
 		GLuint shader_program, VAO;
-		std::vector<GLuint> uniform_locations;
+		std::vector<GLuint> uniform_ids;
 		Program(std::vector<GLenum> buffers);
 		~Program();
 		void compile_shader(const char *source, GLenum type);

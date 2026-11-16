@@ -1,5 +1,7 @@
 #include "objects.hpp"
 #include "shaders.hpp"
+#include <cstdint>
+#include <cassert>
 
 void initMaterial(MATERIAL *mat, GLuint ambient_tex, GLuint diffuse_tex, GLuint specular_tex, float shiny_scal) {
 	mat->ambient = ambient_tex;
@@ -54,18 +56,12 @@ Object::Object(Program *shader, GLint _indices, GLsizei _instances, GLenum _mode
 
 Object::~Object() {}
 
-void Object::initVertexData(Program *shader, GLsizeiptr siz, const void *data) {
-	shader->buffer_append_data(GL_ARRAY_BUFFER, siz, data);
+void Object::initVertexData(Program *shader, GLsizeiptr siz, const void *data, GLenum usage) {
+	shader->buffer_append_data(GL_ARRAY_BUFFER, siz, data, usage);
 }
 
-void Object::initElementData(Program *shader, GLsizeiptr siz, const void *data) {
-	// TODO: remove this. indices will be automatically assumed
-	if (indices) {
-		count = siz / shader->element_size;
-		constexpr size_t buf = match_buffer(GL_ELEMENT_ARRAY_BUFFER);
-		indices_ptr = shader->buffer_offsets[buf];
-	}
-	count = siz / shader->buffers[GL_ELEMENT_ARRAY_BUFFER].elem_size;
-	indices_ptr = shader->buffers[GL_ELEMENT_ARRAY_BUFFER].siz;
-	shader->buffer_append_data(GL_ELEMENT_ARRAY_BUFFER, siz, data);
+void Object::initElementData(Program *shader, GLsizeiptr siz, const void *data, GLenum usage, GLsizei elem_size) {
+	count = siz / elem_size;
+	indices_ptr = reinterpret_cast<void*>(shader->buffers[GL_ELEMENT_ARRAY_BUFFER].siz);
+	shader->buffer_append_data(GL_ELEMENT_ARRAY_BUFFER, siz, data, usage);
 }

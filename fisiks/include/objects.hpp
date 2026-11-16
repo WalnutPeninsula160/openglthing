@@ -46,8 +46,8 @@ class Object {
 		GLenum mode, index_type;
 		Object(Program *shader, GLint indices, GLsizei instances, GLenum );
 		~Object();
-		void initVertexData(Program *shader, GLsizeiptr siz, const void *data);
-		void initElementData(Program *shader, GLsizeiptr siz, const void *data);
+		void initVertexData(Program *shader, GLsizeiptr siz, const void *data, GLenum usage);
+		void initElementData(Program *shader, GLsizeiptr siz, const void *data, GLenum usage, GLsizei elem_size);
 		inline void calculate_Normal_mat() {
 			Normals.resize(models.size());
 			for (size_t i {}; i < Normals.size(); i++)
