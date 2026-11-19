@@ -1,4 +1,5 @@
 #include "shaders.hpp"
+#include <cassert>
 
 char *read_file(const char *path) { 
 	FILE *file = std::fopen(path, "rb");
@@ -102,14 +103,19 @@ void Program::buffer_append_data(GLenum buffer_type, GLsizeiptr siz, const void 
 	buffers[buffer_type].siz += siz;
 }
 
-void Program::configure_VA_attribs(GLuint locations[], GLenum types[], GLint sizes[], GLboolean normalized[], GLsizei strides[], const void *pointers[], size_t num_attribs) {
+// vertex attribute locations are expected to be in numerical order (0, 1, 2, 3, ...)
+void Program::configure_VA_attribs(std::vector<GLenum> types, std::vector<GLint> sizes, std::vector<GLboolean> normalized, std::vector<GLsizei> strides, std::vector<const void*> pointers) {
+	assert(types.size() == sizes.size());
+	assert(sizes.size() == normalized.size());
+	assert(normalized.size() == strides.size());
+	assert(strides.size() == pointers.size());
 	vertex_size = 0;
 	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, buffers[0].id);
-	for (size_t i {}; i < num_attribs; i++) {
+	glBindBuffer(GL_ARRAY_BUFFER, buffers[GL_ARRAY_BUFFER].id);
+	for (size_t i {}; i < types.size(); i++) {
 		vertex_size += sizes[i];
-		glVertexAttribPointer(locations[i], types[i], sizes[i], normalized[i], strides[i], pointers[i]);
-		glEnableVertexAttribArray(locations[i]);
+		glVertexAttribPointer(i, types[i], sizes[i], normalized[i], strides[i], pointers[i]);
+		glEnableVertexAttribArray(i);
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(VAO);

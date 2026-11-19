@@ -38,7 +38,7 @@ class Program {
 		void compile_shader(const char *source, GLenum type);
 		void buffer_data(GLenum buffer_type, GLsizeiptr siz, const void *data, GLenum usage);
 		void buffer_append_data(GLenum buffer_type, GLsizeiptr siz, const void *data, GLenum usage);
-		void configure_VA_attribs(GLuint locations[], GLenum types[], GLint sizes[], GLboolean normalized[], GLsizei strides[], const void *pointers[], size_t num_attribs);
+		void configure_VA_attribs(std::vector<GLuint> locations, std::vector<GLenum> types, std::vector<GLint> sizes, std::vector<GLboolean> normalized, std::vector<GLsizei> strides, std::vector<const void*> pointers, std::vector<size_t> num_attribs) 
 		void draw_object(Object *obj);
 		void draw_sequential_objects(Object *objs[]);
 		void draw_objects(Object *objs[]);

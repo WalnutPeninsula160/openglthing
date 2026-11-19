@@ -125,11 +125,17 @@ int main() {
 	}
 	glfwGetFramebufferSize(window, &W, &H);
 	glViewport(0, 0, W, H);
+	Program shaders = Program(GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER);
+	shaders.compile_shader(vertex_shader_path, GL_VERTEX_SHADER);
+	shaders.compile_shader(fragment_shader_path, GL_FRAGMENT_SHADER);
+	shaders.configure_VA_attribs(
+		{3, 2, 3},
+		{GL_FLOAT, GL_FLOAT, GL_FLOAT},
+		{GL_FALSE, GL_FALSE, GL_FALSE},
+		{5 * sizeof(float), 5 * sizeof(float), 5 * sizeof(float)},
+		{(void*)0, (void*)(3 * sizeof(float)), (void*)(6 * sizeof(float))}
+	);
 	glfwTerminate();
 	return 0;
 }
-
-
-
-
 
