@@ -31,9 +31,10 @@ class Program {
 	public:
 		std::unordered_map<GLenum, buffer_t> buffers;
 		size_t vertex_size;
-		GLuint shader_program, VAO;
+		GLuint shader_program, VAO, framebuffer {};
 		std::vector<GLuint> uniform_ids;
 		Program(std::vector<GLenum> buffers);
+		Program(std::vector<Glenum> buffers, bool framebuffer);
 		~Program();
 		void compile_shader(const char *source, GLenum type);
 		void buffer_data(GLenum buffer_type, GLsizeiptr siz, const void *data, GLenum usage);

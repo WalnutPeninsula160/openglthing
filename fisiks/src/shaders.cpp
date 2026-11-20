@@ -29,12 +29,19 @@ char *read_file(const char *path) {
 	return result;
 }
 
-Program::Program(std::vector<GLenum> program_buffers) {
+Program::Program(std::vector<GLenum> Buffers) {
 	shader_program = glCreateProgram();
 	glGenVertexArrays(1, &VAO);
-	for (GLenum buffer : program_buffers) {
+	for (GLenum buffer : Buffers)
 		buffers.insert({buffer, {0,0}});
-	}
+}
+
+Program::framebuffer(GLenum InternalFormat, GLsizei w, GLsizei h, GLenum Attachment) {
+	glGenRenferbuffers(1, &framebuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, framebuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, InternalFormat, w, h);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, Attachment, GL_RENDERBUFFER, framebuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
 
 Program::~Program() {}
