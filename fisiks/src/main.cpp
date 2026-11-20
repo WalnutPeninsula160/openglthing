@@ -18,6 +18,8 @@
 #include "objects.hpp"
 #include "shaders.hpp"
 
+// boo
+
 #define SCR_WIDTH 900
 #define SCR_HEIGHT 600
 
